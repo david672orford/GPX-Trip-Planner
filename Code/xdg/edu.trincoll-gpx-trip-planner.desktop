@@ -1,0 +1,13 @@
+[Desktop Entry]
+Value=1.0
+Encoding=UTF-8
+Type=Application
+
+Name=GPX Trip Planner
+Name[ru]=GPX для путошествией
+Categories=Utility
+
+Exec=%LAUNCHER% %F
+Icon=gpx-trip-planner
+
+MimeType=application/gpx+xml

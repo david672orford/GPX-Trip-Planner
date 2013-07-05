@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>		<!-- in MacOS folder -->
+    <string>GPX Trip Planner</string>
+    <key>CFBundleDisplayName</key>		<!-- in Finder -->
+    <string>GPX Trip Planner</string>
+    <key>CFBundleName</key>				<!-- in Apple menu -->
+    <string>GPX Trip Planner</string>
+    <key>CFBundleIconFile</key>			<!-- in Resources folder -->
+    <string>app_icon.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>edu.trincoll.osm.gpx-trip-planner</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+</dict>
+</plist>

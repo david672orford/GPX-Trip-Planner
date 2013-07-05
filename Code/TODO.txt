@@ -1,0 +1,33 @@
+== Not Yet Implemented ==
+
+* Implement Undo
+
+* Map improvements
+ * Apply pan-zoom rules for waypoints and search results to 
+   clicks on route points too.
+
+* Possible Additional Search Sources
+ * Google Maps
+ * Geocaching.com
+ * Opencaching.us, etc.
+ * Geonames.org
+
+* Geocoded image display
+ * Support display of images linked to in waypoints
+
+* Improve GPX format support:
+ * namespace support is a hack
+ * Garmin waypoint address extensions
+ * Geocaching extensions
+
+* UI improvements:
+ * Hide mode buttons which are not supported
+
+* Garmin support
+ * Import from a turned-off GPS produces an GPX parse error. We should
+   to try get an error message which specificly names the cause
+ * Import of tracks (over the Garmin USB protocol) produces one multi-segment
+   track whereas the GPX files which the GPSr writes itself to the SD card
+   has multiple tracks. It would be more useful to have multiple tracks
+   in both cases.
+

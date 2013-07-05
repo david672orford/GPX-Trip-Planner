@@ -1,0 +1,15 @@
+#! /bin/sh
+# gpx-trip-planner
+set -e
+
+# This is used to set up desktop file associations on Linux.
+LAUNCHER="$0"
+export LAUNCHER
+
+profile_dir="$HOME/Documents/GPX Trip Planner"
+if [ -z "$1" -a -d "$profile_dir" ]
+	then
+	cd "$profile_dir"
+	fi
+
+python `dirname $LAUNCHER`/Code/gpx-trip-planner.py --profile-dir="$profile_dir" "$@"

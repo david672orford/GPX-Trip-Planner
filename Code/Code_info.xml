@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AppUpdate>
+	<DisplayVersion>0.90</DisplayVersion>
+	<UpdateVersion>62</UpdateVersion>
+	<DistribDirURL>http://gpx.osm.trincoll.edu</DistribDirURL>
+	<DistribDirSSH>mouse:/home/chappell/osm_sites/gpx</DistribDirSSH>
+</AppUpdate>

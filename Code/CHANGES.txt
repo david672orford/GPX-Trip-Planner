@@ -1,0 +1,148 @@
+==============================================================================
+ Changes in version 0.90
+==============================================================================
+
+* Replaced map widget which was based on Osmgpsmap with a pure-Python
+  implementation. This brings the following features:
+  * Fractional zoom
+  * More than one tile layer at a time (such as for overlays)
+
+* Waypoints now have labels at high zoom.
+
+* Added live GPS support (including track recording)
+
+* Added zoom in and out controls
+
+* Moved map layer selection to a dropdown menu on the top toolbar
+
+* Added support for separately selected overlay layers.
+
+* Printing of the default tiles from Openstreetmap.org now downloads and
+  uses the SVG version of the map.
+
+* Can now load GPX 1.0 files (though they will be saved in GPX 1.1 format).
+
+* Added POI layer. This layer loads POIs from CSV files.
+
+* Added Photo layer. This layer loads JPEG files with latitude and longitude
+  in their EXIF data.
+
+* If a string pasted into the program looks like a coordinate pair and it
+  can be parsed, a new waypoint will now be created. (Previously it would
+  be pasted into the search tab.)
+
+==============================================================================
+ Changes in version 0.81
+==============================================================================
+
+* Fixed problems in the XML description of the GUI which prevented one from
+  typing one's own values into the combo boxes for the name of the route to
+  which to add a point.
+
+* Added splitting of track segments.
+
+* Double clicking on a waypoint in the treeview still centers it in the map
+  and zooms in to level 14 (if the map is not already zoomed in furthur.
+  However, single clicking now brings the point into view zooming _out_ if
+  necessary and recentering the map so that the clicked-on point is visible
+  while keeping everything which was already visible visible.
+
+* Same as above but for search results.
+
+==============================================================================
+ Changes in version 0.8 (7 July 2012)
+==============================================================================
+
+* Fixed support for <author>, <link>, an <email> tags. (It had been
+  incorrectly assumed that these tags had text content.)
+
+* Removed support for saving back to GPSr (since most devices don't support
+  this). This inclues renaming "File->Open GPSr" to "File->Import from GPSr".
+
+* Added support for importing from Garmin mass storage devices and sending
+  objects to them.
+
+* Added symbols: "Gas Station", "Picnic Area", "Fishing Area"
+
+* The zoom level is now displayed at the bottom right of the status bar.
+
+* Added Stamen Toner OSM map layer
+
+==============================================================================
+ Changes in version 0.7
+==============================================================================
+
+New Features
+
+* The map can now be printed by choosing File->Print. Crop marks can be turned
+on so that one can see in advance where the boundaries of the printed page
+are. Turn them on in the View menu.
+
+* The GPSr can be selected. There is basic support for Tomtom, Garmin USB
+protocol, and Delorme.
+
+* Search results which are point objects (such as houses and town centers) are
+indicated by a magnifying glass symbol that gets bigger as one zooms in. Search
+results which are polygons (such as town borders) are indicated by drawing the
+border.
+
+* Each waypoint, route, and track can be hidden by clicking on the checkbox
+in the left-hand column of the list view, under the eye. All checkboxes in
+a column can be set by clicking on the eye in the column header. The display 
+state of each object is saved in the GPX file.
+
+* Data from additional GPX files or from LOC files may be imported using
+File->Import.
+
+* If the program is invoked with the --import parameter and the name of one
+or more files, a new window will not be created. Instead the existing instance
+last started will be asked to import the files.
+
+* The script gpx-track-preprocessor.py will take a large number of GPX files
+containing tracks as input and output one file per track. The output files
+will be Gzip-compressed and will have their bounding boxes in their file names
+in order to facilitate rapid searching. If the output directory is stored at
+the same level as gpx-trip-planner.exe, then tracks which intersect the current
+view can be loaded by choosing File->Import Preprocessed Tracks from the menu.
+
+* The symbol for phantom points (which appear when editing routes and can be
+dragged to add new points) has been changed from a smaller circle to a plus.
+
+* The selected waypoint is now indicated by a red X under the symbol rather 
+than by circling the symbol.
+
+* There is now a button to clear the search terms and results.
+
+* Map symbols added: Restroom, Residence, Geocache
+
+* The map symbols for points are now also displayed in the list view next to
+each item.
+
+* When one zooms using the mouse wheel (currently the only way to zoom), the
+point under the mouse pointer now stays under the mouse pointer.
+
+* New map layers: OSM Default, OSM Bike Map, B&W Map
+
+* There is now a command in the Tools menu to merge guide points into the
+nearest maneuver point. This feature is still imperfect: if it is used more
+than once after the a route is fleshed out, it will continue to remove points.
+
+* When a route is fleshed out, the maneuver points which are added are now
+named for the streets or are called "Maneuver" when there is no street name.
+
+* Option Cut added to the Edit menu.
+
+* The drawing color of a route or a track can now be set by selecting the head 
+item in the list in the sidebar. A select box will appear in the form below.
+
+Bugs Fixed
+
+* The selector for picking a route which to add a point now allows one to type
+a new name into it.
+
+* Coping and pasting with other programs under Win32 may be fixed.
+
+* <ele> and <time> are now cleared when a point is dragged (since neighter one
+of then will be true after the location is changed).
+
+

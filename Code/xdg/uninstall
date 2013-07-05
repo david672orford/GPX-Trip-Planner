@@ -1,0 +1,19 @@
+#! /bin/sh
+# See:
+# http://portland.freedesktop.org/wiki/
+# http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-1.0.html
+
+set -e
+
+for size in 16 22 32 48 64 128
+	do
+	xdg-icon-resource uninstall --noupdate --context mimetypes --size $size gpx-file
+	xdg-icon-resource uninstall --noupdate --context apps      --size $size gpx-trip-planner
+	done
+xdg-icon-resource forceupdate
+
+xdg-mime uninstall edu.trincoll-gpx-file.xml
+
+xdg-desktop-menu uninstall edu.trincoll-gpx-trip-planner.desktop
+
+exit 0

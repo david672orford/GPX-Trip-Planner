@@ -1,0 +1,21 @@
+#! /bin/sh
+set -e
+cd ..
+
+# Pack the code
+tar zhcvf Code.tar.gz Code
+
+# Get the SSH address of the distribution point
+target=`perl -n -e 'if(m#<DistribDirSSH>([^<]+)</DistribDirSSH>#) { print $1,"\n" }' <Code/Code_info.xml`
+echo "Uploading to $target..."
+
+# Upload the code and the info file
+scp Code.tar.gz Code/Code_info.xml $target/
+
+# Remove the temporary file
+rm Code.tar.gz
+
+# Increment the version number to reflect the fact that development of a new version has (theoreticaly) started.
+perl -i.bak -p -e 's#<UpdateVersion>(\d+)</UpdateVersion>#sprintf("<UpdateVersion>%d</UpdateVersion>",$1+1)#e' Code/Code_info.xml
+rm Code/Code_info.xml.bak
+

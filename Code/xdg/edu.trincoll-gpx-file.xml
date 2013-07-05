@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+  <mime-type type="application/gpx+xml">
+    <comment>GPS Exchange</comment>
+    <glob pattern="*.gpx"/>
+    <glob pattern="*.gpx.gz"/>
+  </mime-type>
+</mime-info>

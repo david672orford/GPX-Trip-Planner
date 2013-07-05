@@ -1,0 +1,21 @@
+#! /bin/sh
+set -o nounset
+set -o errexit
+
+echo "Extracting from XML..."
+intltool-extract --type=gettext/glade ../../Code/gpx_gui.xml
+mv ../../Code/gpx_gui.xml.h .
+perl -p -e 's/^char \*s = //; s/;$//; s/"$/" \\/' <gpx_gui.xml.h >gpx_gui.xml.py
+
+echo "Extracting from Python code..."
+xgettext -o messages.pot \
+	--from-code utf-8 \
+	-k_ -kN_ -kngettext \
+	gpx_gui.xml.py \
+	../../Code/*.py
+
+echo "Merging with existing translations..."
+msgmerge -U ru.po messages.pot
+rm messages.pot
+
+echo "Done."

@@ -1,0 +1,28 @@
+#! /bin/sh
+# Usage: <this_directory> <path_to_prog>
+
+set -e
+cd "$1"
+
+# Install the icons for GPX files and for the GPX Trip Planner.
+for size in 16 22 32 48 64 128
+	do
+	xdg-icon-resource install --noupdate --context mimetypes --size $size ../images/gpx-file-${size}x${size}.png gpx-file
+	xdg-icon-resource install --noupdate --context apps      --size $size ../images/app_icon-${size}x${size}.png gpx-trip-planner
+	done
+xdg-icon-resource forceupdate
+
+# Install the GPX file MIME type.
+xdg-mime install edu.trincoll-gpx-file.xml
+
+# Install the .desktop file after filling in the name of the launcher.
+tempdir=`mktemp -d`
+menu_file=$tempdir/edu.trincoll-gpx-trip-planner.desktop
+sed -e "s#%LAUNCHER%#$2#" <edu.trincoll-gpx-trip-planner.desktop >$menu_file
+xdg-desktop-menu install $menu_file
+rm -r $tempdir
+
+# Try to make GPX Trip Planner the default program for opening GPX files.
+xdg-mime default edu.trincoll-gpx-trip-planner.desktop application/gpx+xml
+
+exit 0

@@ -1,0 +1,6 @@
+#! /bin/sh
+set -o nounset
+set -o errexit
+
+msgfmt ru.po -o ../../Code/locale/ru/LC_MESSAGES/gpx-trip-planner.mo
+

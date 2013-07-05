@@ -1,0 +1,28 @@
+#! /bin/sh
+# Last modified: 11 January 2013
+
+# Errors are fatal
+set -e
+
+# Find the bundle root. It will be two levels above this script.
+cd "`dirname \"$0\"`"/../..
+bundle_root=`pwd`
+
+# Now move into the directory where our GPX files are kept.
+document_dir="$HOME/Documents/GPX Trip Planner"
+if [ ! -d "$document_dir" ]
+	then
+	mkdir -p "$document_dir"
+	fi
+cd "$document_dir"
+
+# Set some environment variables
+runtime=$bundle_root/MacOSX_Runtime
+export PATH=$runtime/bin:$PATH
+export DYLD_FALLBACK_LIBRARY_PATH=$runtime/lib
+# This is lib/gdk-pixbuf-2.0/2.10.0/loaders.cache with the paths changed to use @executable_path:
+export GDK_PIXBUF_MODULE_FILE=$runtime/etc/gtk-2.0/gdk-pixbuf.loaders
+export XDG_DATA_DIRS=$runtime/share
+
+# Start the application.
+exec python "$bundle_root/Code/gpx-trip-planner.py" "$@"
