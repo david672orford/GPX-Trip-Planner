@@ -1,6 +1,7 @@
 # encoding=utf-8
 # gpx_reference_layers.py
-# Last modified: 16 May 2013
+# Copyright 2013, 2014, Trinity College
+# Last modified: 28 March 2014
 
 class GpxTileLayer(object):
 	def __init__(self, importance, display_name, tileset_names, default=False, tooltip=None, overlay=False):
@@ -18,6 +19,7 @@ layers = (
 	GpxTileLayer(1, _("OSM Standard"), "osm-default"),
 	GpxTileLayer(2, _("OSM Cycle"), "osm-cycle"),
 	GpxTileLayer(3, _("OSM Public Transport"), "osm-transport"),
+	GpxTileLayer(3, _("OSM Humanitarian"), "osm-humanitarian"),
 	GpxTileLayer(2, _("OSM Openbusmap"), "opnvkarte"),
 	GpxTileLayer(1, _("OSM Mapquest"), "mapquest-osm", default=True),
 	GpxTileLayer(2, _("OSM Openstreetbrowser"), "openstreetbrowser"),
@@ -26,11 +28,6 @@ layers = (
 	GpxTileLayer(3, _("OSM B&W"), "toolserver-bw-mapnik"),
 	GpxTileLayer(3, _("OSM No Labels"), "toolserver-osm-no-labels"),
 	GpxTileLayer(2, _("OSM Russian Labels"), ("toolserver-osm-no-labels", "toolserver-osm-labels-ru")),
-	GpxTileLayer(3, _("OSM Cloudmade Web Style"), "cloudmade-web-style"),
-	GpxTileLayer(3, _("OSM Cloudmade Fine Line"), "cloudmade-fine-line"),
-	GpxTileLayer(2, _("OSM Cloudmade Fresh"), "cloudmade-fresh"),
-	GpxTileLayer(3, _("OSM Cloudmade Pale Dawn"), "cloudmade-pale-dawn"),
-	GpxTileLayer(2, _("OSM Cloudmade Tourist"), "cloudmade-tourist"),
 	GpxTileLayer(1, _("OSM Stamen Toner"), "stamen-toner"),
 	GpxTileLayer(2, _("OSM Stamen Toner Hybrid"), "stamen-toner-hybrid"),
 	GpxTileLayer(2, _("OSM Stamen Toner Lite"), "stamen-toner-lite"),

@@ -1,11 +1,12 @@
 # gpx_data_gpx.py
 # Copyright 2013, Trinity College
-# Last modified: 24 April 2013
+# Last modified: 18 July 2013
 
 import gtk
 import gobject
 import xml.sax
 import xml.sax.saxutils
+import math
 
 import pykarta.geometry
 from pykarta.maps.projection import project_to_tilespace
@@ -576,6 +577,7 @@ class GpxTrackSegment(object):
 		self.iter = None		# set by parent
 		self.bbox = None
 		self.projected_points = None
+		self.projected_simplified_points = None
 	def __iter__(self):
 		iter = self.datastore.iter_children(self.iter)
 		while iter != None:
@@ -610,10 +612,17 @@ class GpxTrackSegment(object):
 			for point in self:
 				self.bbox.add_point(point)
 		return self.bbox
-	def get_projected_points(self):
+	# Return points projected to tilespace. The answer is cached.
+	def get_projected_simplified_points(self, zoom):
+		zoom = int(zoom + 0.5)
 		if self.projected_points is None:
 			self.projected_points = map(lambda p: project_to_tilespace(p.lat, p.lon, 0), self)
-		return self.projected_points
+			self.projected_simplified_points = {}
+		if not zoom in self.projected_simplified_points:
+			tolerance = 1 / (256.0 * math.pow(2, zoom))
+			self.projected_simplified_points[zoom] = pykarta.geometry.line_simplify(self.projected_points, tolerance)
+			print "Simplified %d points to %d points at zoom level %d with tolerance %f" % (len(self.projected_points), len(self.projected_simplified_points[zoom]), zoom, tolerance)
+		return self.projected_simplified_points[zoom]
 
 #=============================================================================
 # This object holds the data from one or more GPX files.

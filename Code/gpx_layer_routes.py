@@ -2,7 +2,7 @@
 # gpx_layer_routes.py
 # Map layer which shows the routes from a GPX file
 # Copyright 2013, Trinity College
-# Last modified: 1 May 2013
+# Last modified: 15 August 2013
 #=============================================================================
 
 import gtk
@@ -21,10 +21,11 @@ class RouteLayer(GpxVectorLayer):
 		self.layer_objs = gpx_data.routes
 		self.layer_objs.add_client("map_layer", self)
 
-		self.radius = 2.5
+		self.radius = 5.0
 		self.zoomed_route_i = None
 		self.selected_path = None
 		self.drag_obj_indexes = None
+		self.dragged = False
 		self.draw_obj_index = None
 		self.draw_append = True
 
@@ -91,7 +92,7 @@ class RouteLayer(GpxVectorLayer):
 		for route in self.layer_objs:
 			if route.gpxtp_show:
 				if route.get_bbox().overlaps(map_bbox):		# if in (or a least near) viewport
-					self.visible_objs.append(self.GpxRouteDraw(route_i, route, self))
+					self.visible_objs.append(self.GpxRouteDrawn(route_i, route, self))
 			route_i += 1
 		self.containing_map.feedback.debug(1, " %d of %d routes are in view" % (len(self.visible_objs), len(self.layer_objs)))
 
@@ -99,8 +100,8 @@ class RouteLayer(GpxVectorLayer):
 	def do_draw(self, ctx):
 		zoom = self.containing_map.get_zoom()
 		# Step through those routes which are in view.
-		for route_draw in self.visible_objs:
-			route_draw.draw(ctx)
+		for route_drawn in self.visible_objs:
+			route_drawn.draw(ctx)
 
 	# Called when any mouse button is pressed down
 	def on_button_press(self, gdkevent):
@@ -113,7 +114,7 @@ class RouteLayer(GpxVectorLayer):
 			return False
 
 		# If the drawing of a route is already in progress, add a point.
-		if self.tool == "tool_draw" and self.draw_obj_index != None:
+		if self.tool == "tool_draw" and self.draw_obj_index is not None:
 			route = self.layer_objs[self.draw_obj_index]
 			point_i = len(route)
 			lat, lon = self.containing_map.unproject_point(gdkevent.x, gdkevent.y)
@@ -133,27 +134,30 @@ class RouteLayer(GpxVectorLayer):
 		# User may have clicked on an existing point. Step thru the points of each
 		# visible route looking for one that is close to the place where
 		# the user hit.
-		visible_route_i = len(self.visible_objs)
-		for route_draw in reversed(self.visible_objs):
-			visible_route_i -= 1		# interating in reverse
+		route_drawn_i = len(self.visible_objs)
+		for route_drawn in reversed(self.visible_objs):
+			route_drawn_i -= 1		# interating in reverse
 
 			# Step thru the (explicit) points.
 			point_i = 0
-			for point in route_draw.explicit_pts:
+			for point in route_drawn.explicit_pts:
 				x, y = point
 				if abs(gdkevent.x - x) <= self.radius and abs(gdkevent.y - y) <= self.radius:
-					print "Hit route point: (%d,%d,%d)" % (route_draw.index, visible_route_i, point_i)
+					print "Hit route point: (%d,%d,%d)" % (route_drawn.index, route_drawn_i, point_i)
 					if self.tool == "tool_delete":
-						del self.layer_objs[route_draw.index][point_i]	# triggers do_viewport()
-						if len(self.layer_objs[route_draw.index]) == 0:	# if route empty, delete
-							del self.layer_objs[route_draw.index]
+						#del self.layer_objs[route_drawn.index][point_i]	# triggers do_viewport()
+						#if len(self.layer_objs[route_drawn.index]) == 0:	# if route empty, delete
+						#	del self.layer_objs[route_drawn.index]
+						del route_drawn.route[point_i]	# triggers do_viewport()
+						if len(route_drawn.route) == 0:	# if route empty, delete
+							del self.layer_objs[route_drawn.index]
 					elif self.tool == "tool_draw":
-						self.draw_obj_index = route_draw.index
+						self.draw_obj_index = route_drawn.index
 						self.draw_append = (point_i > 0)
 					elif self.tool != None:		# must be tool_select or tool_adjust
-						self.select((route_draw.index, point_i))
+						self.select((route_drawn.index, point_i))
 						if self.tool == 'tool_adjust':
-							self.drag_obj_indexes = [visible_route_i, point_i]
+							self.drag_obj_indexes = [route_drawn_i, point_i]
 						self.containing_map.queue_draw()
 					else:
 						print "Route layer is not active."
@@ -161,7 +165,7 @@ class RouteLayer(GpxVectorLayer):
 				point_i += 1
 
 			# Nope? Then see whether one of the phantom points was hit.
-			for point in route_draw.phantom_points:
+			for point in route_drawn.phantom_points:
 				x, y, point_i = point
 				if abs(gdkevent.x - x) <= self.radius and abs(gdkevent.y - y) <= self.radius:
 					print "Hit phantom route point"
@@ -174,12 +178,12 @@ class RouteLayer(GpxVectorLayer):
 					point.src = "User Placed"
 
 					print "New point comes after:", point_i
-					route = self.layer_objs[route_draw.index]
+					route = self.layer_objs[route_drawn.index]
 					route[point_i].route_shape = []
 					route.insert(point_i+1, point)	# triggers do_viewport()
 
-					self.drag_obj_indexes = [visible_route_i, point_i+1]		# should come out like this
-					self.select((route_draw.index, point_i+1))
+					self.drag_obj_indexes = [route_drawn_i, point_i+1]		# should come out like this
+					self.select((route_drawn.index, point_i+1))
 					return True
 
 		# No point hit. User clicked in an open area. If the draw tool is
@@ -204,25 +208,30 @@ class RouteLayer(GpxVectorLayer):
 	# This is called when the mouse is moved over the map.
 	def on_motion(self, gdkevent):
 		if self.drag_obj_indexes:
-			visible_route_i, point_i = self.drag_obj_indexes
-			self.visible_objs[visible_route_i].drag(point_i, int(gdkevent.x), int(gdkevent.y))
+			route_drawn_i, point_i = self.drag_obj_indexes
+			self.visible_objs[route_drawn_i].drag(point_i, int(gdkevent.x), int(gdkevent.y))
+			self.dragged = True
 			return True
 		return False
 
 	# This is called when a mouse button is released over the map.
 	def on_button_release(self, gdkevent):
 		if self.drag_obj_indexes:								# is dragging in progress?
-			visible_route_i, point_i = self.drag_obj_indexes
-			route_draw = self.visible_objs[visible_route_i]		# find this route in the drawing list
-			route_draw.drop(point_i)							# set lat and lon
-			self.layer_objs.touch((route_draw.index, point_i))	# so treeview will be updated
+			route_drawn_i, point_i = self.drag_obj_indexes
+			route_drawn = self.visible_objs[route_drawn_i]		# find this route in the drawing list
+			if self.dragged:
+				route_drawn.drop(point_i)						# set lat and lon
+				self.dragged = False
+			else:
+				del route_drawn.route[point_i]
+			self.layer_objs.touch((route_drawn.index, point_i))	# so treeview will be updated
 			self.select(self.selected_path)						# so form will be updated
 			self.drag_obj_indexes = None						# stop dragging
 			return True
 		return False
 
 	# The class wraps up the information about how to draw a visible route in pixel space.
-	class GpxRouteDraw(object):
+	class GpxRouteDrawn(object):
 		def __init__(self, index, route, layer):
 			self.index = index
 			self.route = route

@@ -1,8 +1,8 @@
 #! /usr/bin/python
 # gpx-poi-loader.py
-# Last modified: 28 March 2013
+# Last modified: 10 August 2013
 
-import lib.format_csv_unicode as csv
+import pyapp.csv_unicode as csv
 import sqlite3
 import os
 import glob

@@ -2,11 +2,12 @@
 # gpx_layer_tracks.py
 # Track map layer
 # Copyright 2013, Trinity College
-# Last modified: 1 May 2013
+# Last modified: 5 July 2013
 #=============================================================================
 
 import gtk
 import math
+import cairo
 
 from gpx_layer import GpxVectorLayer
 import pykarta.geometry
@@ -61,6 +62,7 @@ class TrackLayer(GpxVectorLayer):
 
 	def do_viewport(self):
 		map_bbox = self.containing_map.get_bbox()
+		zoom = self.containing_map.get_zoom()
 		self.visible_objs = []
 		track_i = 0
 		trackseg_count = 0
@@ -69,9 +71,9 @@ class TrackLayer(GpxVectorLayer):
 				trackseg_i = 0
 				for track_segment in track:
 					if track_segment.get_bbox().overlaps(map_bbox):
-						color = gpx_colors.rgb_by_name.get(track.gpxx_DisplayColor, (0.0, 1.0, 0.0, 1.0))
-						#self.visible_objs.append([track_i, trackseg_i, self.containing_map.project_points(track_segment), color])
-						self.visible_objs.append([track_i, trackseg_i, self.containing_map.scale_points(track_segment.get_projected_points()), color])
+						color = gpx_colors.rgb_by_name.get(track.gpxx_DisplayColor, (1.0, 0.0, 0.0, 1.0))
+						points = self.containing_map.scale_points(track_segment.get_projected_simplified_points(zoom))
+						self.visible_objs.append([track_i, trackseg_i, points, color])
 					trackseg_i += 1
 					trackseg_count += 1
 			track_i += 1
@@ -84,33 +86,25 @@ class TrackLayer(GpxVectorLayer):
 		for segment in self.visible_objs:
 			track_i, trackseg_i, points, color = segment
 
-			# Line stroke
-			pykarta.draw.line_string(ctx, points)
-			if self.selected_path == (track_i,) or self.selected_path == (track_i, trackseg_i):
-				ctx.set_line_width(5)
+			if self.selected_path and self.selected_path[0] == track_i:
+				line_width = 4
 			else:
-				ctx.set_line_width(2)
+				line_width = 2
+
+			# Draw track line
+			pykarta.draw.line_string(ctx, points)
+			ctx.set_line_width(line_width)
 			ctx.set_source_rgba(*color)
+			ctx.set_line_join(cairo.LINE_JOIN_ROUND)
 			ctx.stroke()
+			ctx.set_line_join(cairo.LINE_JOIN_MITER)
 
-			# Line arrows
+			# If zoomed in far enough, draw direction of travel arrows
 			if zoom > self.arrow_show_level:
-				distance = 0
-				for i in range(len(points)-1):
-					p1 = points[i]
-					p2 = points[i+1]
-					width = p2[0] - p1[0]
-					height = p2[1] - p1[1]
-					distance += math.sqrt(width*width + height*height)
-					if distance > 50:		# if not too close to previous arrow
-						barb1, barb2 = pykarta.draw.arrowhead_barbs(p1, p2, 10, 15)
-						ctx.move_to(*barb1)
-						ctx.line_to(*p2)
-						ctx.line_to(*barb2)
-						ctx.stroke()
-						distance = 0
+				pykarta.draw.line_string_arrows(ctx, points, line_width=line_width)
+				ctx.stroke()
 
-			# Line points
+			# If this layer is active and map is zoomed in far enough, draw track point markers.
 			if self.tool != None and zoom >= self.point_show_level:
 				point_i = 0
 				for point in points:
@@ -154,5 +148,4 @@ class TrackLayer(GpxVectorLayer):
 				point_i += 1
 
 		return False
-
 

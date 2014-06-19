@@ -1,7 +1,7 @@
 # gpx_satnavs.py
 # Copyright 2013, Trinity College
 # Interface to GPS navigators
-# Last modified: 29 March 2013
+# Last modified: 23 December 2013
 
 import sys
 import subprocess
@@ -77,7 +77,7 @@ class GpxSatnavs(object):
 		try:
 			return reader.load(datastore, self.ui)
 		except Exception as e:
-			self.ui.exception(_("Reading from GPS receiver"), e)
+			self.ui.error_dialog_exception(_("Reading from GPS receiver"), e)
 			return False
 
 	# Send everything that we can back to the designated GPS receiver.
@@ -94,7 +94,7 @@ class GpxSatnavs(object):
 	#		writer = self.liststore[gpsr_index][1]
 	#		return writer.save(datastore, self.ui)
 	#	except Exception as e:
-	#		self.ui.exception(_("Writing to GPS receiver"), e)
+	#		self.ui.error_dialog_exception(_("Writing to GPS receiver"), e)
 	#		return False
 
 	# Send a single object (such as a waypoint or a route) to the GPS receiver.
@@ -105,7 +105,7 @@ class GpxSatnavs(object):
 			writer = self.liststore[gpsr_index][1]
 			return writer.send_obj(obj, self.ui)
 		except Exception as e:
-			self.ui.exception(_("Sending object to GPS receiver"), e)
+			self.ui.error_dialog_exception(_("Sending object to GPS receiver"), e)
 			return False
 
 #=============================================================================

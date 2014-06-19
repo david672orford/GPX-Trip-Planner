@@ -2,10 +2,13 @@
  Changes in version 0.90
 ==============================================================================
 
-* Replaced map widget which was based on Osmgpsmap with a pure-Python
-  implementation. This brings the following features:
+* Replaced map widget (which was based on Osmgpsmap) with a new pure-Python
+  implementation called PyKarta. This brings the following features:
   * Fractional zoom
   * More than one tile layer at a time (such as for overlays)
+
+* Added support for separately selected overlay layers which were made 
+  possible by switching to PyKarta.
 
 * Waypoints now have labels at high zoom.
 
@@ -14,8 +17,6 @@
 * Added zoom in and out controls
 
 * Moved map layer selection to a dropdown menu on the top toolbar
-
-* Added support for separately selected overlay layers.
 
 * Printing of the default tiles from Openstreetmap.org now downloads and
   uses the SVG version of the map.
@@ -30,6 +31,12 @@
 * If a string pasted into the program looks like a coordinate pair and it
   can be parsed, a new waypoint will now be created. (Previously it would
   be pasted into the search tab.)
+
+* On can now delete a route point by clicking on it (with no motion). This
+  makes operation more consistent with that of the Leaflet (leafletjs.com)
+  and Pykarta's MapVectorLayer.
+
+* Dropt Cloudmade layers since Cloudmade is dropping its low-usage customers.
 
 ==============================================================================
  Changes in version 0.81

@@ -157,52 +157,6 @@
       </row>
     </data>
   </object>
-  <object class="GtkMessageDialog" id="ErrorDialog">
-    <property name="can_focus">False</property>
-    <property name="border_width">5</property>
-    <property name="title" translatable="yes">Error</property>
-    <property name="type_hint">dialog</property>
-    <property name="skip_taskbar_hint">True</property>
-    <property name="transient_for">MainWindow</property>
-    <property name="message_type">error</property>
-    <property name="text">Error message goes here.</property>
-    <child internal-child="vbox">
-      <object class="GtkVBox" id="messagedialog-vbox5">
-        <property name="can_focus">False</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="messagedialog-action_area5">
-            <property name="can_focus">False</property>
-            <property name="layout_style">end</property>
-            <child>
-              <object class="GtkButton" id="ErrorDialogOK">
-                <property name="label">gtk-ok</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_stock">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="pack_type">end</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-    <action-widgets>
-      <action-widget response="0">ErrorDialogOK</action-widget>
-    </action-widgets>
-  </object>
   <object class="GtkListStore" id="LiveGpsOptions">
     <columns>
       <!-- column-name gchararray1 -->
@@ -3757,16 +3711,14 @@ into the next maneuver point.</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkLabel" id="MainStatusbar">
+              <object class="GtkStatusbar" id="MainStatusbar">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
-                <property name="ypad">2</property>
+                <property name="spacing">2</property>
               </object>
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="padding">5</property>
                 <property name="position">0</property>
               </packing>
             </child>
@@ -4540,146 +4492,6 @@ into the next maneuver point.</property>
     <action-widgets>
       <action-widget response="0">button203</action-widget>
       <action-widget response="1">button110</action-widget>
-    </action-widgets>
-  </object>
-  <object class="GtkMessageDialog" id="SaveCancelDiscardDialog">
-    <property name="can_focus">False</property>
-    <property name="border_width">5</property>
-    <property name="title" translatable="yes">Unsaved Changes</property>
-    <property name="type_hint">dialog</property>
-    <property name="skip_taskbar_hint">True</property>
-    <property name="transient_for">MainWindow</property>
-    <property name="message_type">question</property>
-    <property name="text" translatable="yes">There are unsaved changes.</property>
-    <child internal-child="vbox">
-      <object class="GtkVBox" id="SaveCancelDiscardDialogVbox">
-        <property name="can_focus">False</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="SaveCancelDiscardDialogActionArea">
-            <property name="can_focus">False</property>
-            <property name="layout_style">end</property>
-            <child>
-              <object class="GtkButton" id="SaveCancelDiscardDialogDiscard">
-                <property name="label">gtk-discard</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_stock">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="SaveCancelDiscardDialogCancel">
-                <property name="label">gtk-cancel</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_stock">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="SaveCancelDiscardDialogSave">
-                <property name="label">gtk-save</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_stock">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="pack_type">end</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-    <action-widgets>
-      <action-widget response="0">SaveCancelDiscardDialogDiscard</action-widget>
-      <action-widget response="1">SaveCancelDiscardDialogCancel</action-widget>
-      <action-widget response="2">SaveCancelDiscardDialogSave</action-widget>
-    </action-widgets>
-  </object>
-  <object class="GtkMessageDialog" id="YesNoDialog">
-    <property name="can_focus">False</property>
-    <property name="border_width">5</property>
-    <property name="title" translatable="yes">Question</property>
-    <property name="type_hint">dialog</property>
-    <property name="skip_taskbar_hint">True</property>
-    <property name="transient_for">MainWindow</property>
-    <property name="message_type">question</property>
-    <property name="text">Question goes here</property>
-    <child internal-child="vbox">
-      <object class="GtkVBox" id="YesNoDialogVbox">
-        <property name="can_focus">False</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="YesNoDialogActionArea">
-            <property name="can_focus">False</property>
-            <property name="layout_style">end</property>
-            <child>
-              <object class="GtkButton" id="YesNoDialogNo">
-                <property name="label">gtk-no</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_stock">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="YesNoDialogYes">
-                <property name="label">gtk-yes</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_stock">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="pack_type">end</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-    <action-widgets>
-      <action-widget response="0">YesNoDialogNo</action-widget>
-      <action-widget response="1">YesNoDialogYes</action-widget>
     </action-widgets>
   </object>
   <object class="GtkImage" id="image1">

@@ -1,3 +1,12 @@
+== Possible Map Layers ==
+
+* Lots of new layers at:
+  http://wiki.openstreetmap.org/wiki/Tile_servers
+
+== Bugs ==
+
+* Visibility of tracks is not always saved properly
+
 == Not Yet Implemented ==
 
 * Implement Undo

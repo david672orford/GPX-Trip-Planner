@@ -4,8 +4,8 @@
 all: app_icon.svg gpx-file.svg
 	for size in 16 22 32 48 64 128 256; \
 		do \
-		rsvg -w $$size -h $$size app_icon.svg app_icon-$${size}x$${size}.png; \
-		rsvg -w $$size -h $$size gpx-file.svg gpx-file-$${size}x$${size}.png; \
+		rsvg-convert -w $$size -h $$size app_icon.svg -o app_icon-$${size}x$${size}.png; \
+		rsvg-convert -w $$size -h $$size gpx-file.svg -o gpx-file-$${size}x$${size}.png; \
 		done
 
 clean:

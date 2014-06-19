@@ -1,8 +1,8 @@
 # coding=utf-8
 #=============================================================================
 # gpx_gui.py
-# Copyright 2013, Trinity College
-# Last modified: 25 June 2013
+# Copyright 2013, 2014, Trinity College
+# Last modified: 22 May 2014
 #=============================================================================
 
 import sys
@@ -18,12 +18,14 @@ import codecs
 import subprocess
 import fnmatch
 
-import utils_updater
-from utils_gtk_appbusy import AppBusy
-from utils_svg_icons import load_icon_pixbuf
-import utils_gtk_macosx
-from utils_gtk_entry import text_entry_wrapper
-import lib.format_csv_unicode as csv
+import pyapp.gtk_common_ui
+import pyapp.svg_icons
+import pyapp.gtk_macosx
+import pyapp.gtk_win32
+import pyapp.gtk_entry
+import pyapp.csv_unicode as csv
+import pyapp.save
+import pyapp.updater
 
 import pykarta.geometry
 import pykarta.maps.tilesets
@@ -132,10 +134,10 @@ class GpxFancyTreeView(GpxSimpleTreeView):
 			self.treeview.connect("button-press-event", self.button_press_cb)
 			column.connect("clicked", self.header_clicked_cb)
 
-			self.show_yes = load_icon_pixbuf("show_yes.svg")
-			self.show_no  = load_icon_pixbuf("show_no.svg")
+			self.show_yes = pyapp.svg_icons.load_icon_pixbuf("show_yes.svg")
+			self.show_no  = pyapp.svg_icons.load_icon_pixbuf("show_no.svg")
 			image = gtk.Image()
-			image.set_from_pixbuf(load_icon_pixbuf("show_header.svg"))
+			image.set_from_pixbuf(pyapp.svg_icons.load_icon_pixbuf("show_header.svg"))
 			column.set_widget(image)
 			image.show()
 
@@ -268,7 +270,7 @@ class GpxForm(object):
 		self.field_entries = []
 		for field_name in fields:
 			print "  form_%s_%s" % (stem, field_name)
-			widget = text_entry_wrapper(builder.get_object("form_%s_%s" % (stem, field_name)))
+			widget = pyapp.gtk_entry.text_entry_wrapper(builder.get_object("form_%s_%s" % (stem, field_name)))
 
 			if field_name == 'link':
 				widget.connect('clicked', self.link_clicked_cb)
@@ -680,10 +682,10 @@ class GpxEditMenu(object):
 			self.map.zoom_to_extent(self.data.get_bbox(mark=mark))
 			return
 
-		lat, lon = pykarta.geometry.parse_lat_lon(pasted_text)
-		if lat is not None:
-			print "Parsed:", lat, lon
-			point = GpxWaypoint(lat, lon)
+		point = pykarta.geometry.PointFromText(pasted_text)
+		if point is not None:
+			print "Parsed:", point
+			point = GpxWaypoint(point.lat, point.lon)	# convert Point() to GpxWaypoint()
 			point.name = pasted_text
 			mark = self.data.get_mark()
 			self.data.waypoints.append(point)
@@ -727,20 +729,19 @@ class GpxEditMenu(object):
 
 class GpxRouteToolsMenu(object):
 
-	def __init__(self, builder, route_data, appbusy_factory):
+	def __init__(self, ui, route_data):
+		self.ui = ui
 		self.menu_names = ["flesh_out_route", "pare_route", "strip_route", "reverse_route"]
 		self.menus = {}
 		self.selected = None
 
 		for menu_name in self.menu_names:
-			self.menus[menu_name] = builder.get_object("menu_tools_%s" % menu_name)
+			self.menus[menu_name] = ui.builder.get_object("menu_tools_%s" % menu_name)
 			self.menus[menu_name].connect("activate", getattr(self, "on_%s" % menu_name))
 			self.menus[menu_name].set_sensitive(False)
 
 		self.route_data = route_data
 		self.route_data.add_client("tools_menu", self)
-
-		self.appbusy_factory = appbusy_factory
 
 	def on_select(self, path, sender, client_name):
 		self.selected = path
@@ -754,8 +755,11 @@ class GpxRouteToolsMenu(object):
 		route = self.route_data[self.selected[0]]		# takes route of selected point
 		self.strip(route)
 		router = GpxRouter()
-		busy = self.appbusy_factory("Routing...")
-		router.flesh_out(route)
+		busy = self.ui.busy("Routing...")
+		try:
+			router.flesh_out(route)
+		except Exception as e:
+			self.ui.error_dialog_exception(_("Routing Failed"), e)
 		print "Route now has %d points" % len(route)
 		self.route_data.select((saved_selected[0],), "tools_route")
 
@@ -810,47 +814,6 @@ class GpxRouteToolsMenu(object):
 				route[i].route_shape = []
 				i += 1
 
-#==========================================================================
-# UI elements which may be need by modules
-#==========================================================================
-
-class GpxPassableUI(object):
-	def __init__(self, builder):
-		self.builder = builder
-		self.statusbar = self.builder.get_object("MainStatusbar")
-
-	def yesno_question(self, question):
-		dialog = self.builder.get_object("YesNoDialog")
-		dialog.set_markup(question)
-		answer = dialog.run()
-		dialog.hide()
-		if answer == -4:		# user clicked x on title bar
-			return None
-		elif answer:
-			return True
-		else:
-			return False
-
-	def error(self, message):
-		dialog = self.builder.get_object("ErrorDialog")
-		message = message.replace("&", "&amp;")
-		message = message.replace("<", "&lt;")
-		message = message.replace(">", "&gt;")
-		dialog.set_markup(message)
-		dialog.run()
-		dialog.hide()
-
-	def exception(self, operation, e):
-		(e_type, e_value, e_traceback) = sys.exc_info()
-		print "%s: %s" % (e_type, e_value)
-		print traceback.format_exc(e_traceback)
-		self.error("Failure during %s: %s" % (operation, str(e)))
-
-	def show_status(self, status_text):
-		self.statusbar.set_text(status_text)
-		while gtk.events_pending():			# make sure message shows up right away
-			gtk.main_iteration(False)
-
 #=============================================================================
 # Main
 #=============================================================================
@@ -873,7 +836,7 @@ class GpxGUI(object):
 		self.save_filename = None
 
 		# Must be done before Gtk+ is initialized
-		self.macapp = utils_gtk_macosx.Application()
+		self.macapp = pyapp.gtk_macosx.Application()
 
 		#------------------------
 		# Load GUI description
@@ -891,7 +854,7 @@ class GpxGUI(object):
 		self.zoom_display = self.builder.get_object("ZoomDisplay")
 
 		# Routines which modules can use to make limited use of the UI
-		self.ui = GpxPassableUI(self.builder)
+		self.ui = pyapp.gtk_common_ui.CommonUI(self.main_window, self.builder)
 
 		#---------------------------------------------------------
 		# Set window manager hints
@@ -933,7 +896,8 @@ class GpxGUI(object):
 		#---------------------------------------------------------
 		# Create the map widget
 		#---------------------------------------------------------
-		self.map = MapWidget(tile_source=None)
+		print "Creating map widget..."
+		self.map = MapWidget(tile_source=None, debug_level=0)
 		self.builder.get_object("MapVbox").pack_end(self.map)
 		self.map.set_coordinates_cb(self.coordinates_cb)
 		self.map.set_zoom_cb(self.zoom_cb)
@@ -1066,11 +1030,11 @@ class GpxGUI(object):
 		self.init_bookmarks()
 
 		# Initialize Tools menu
-		self.tools_menu = GpxRouteToolsMenu(self.builder, self.data.routes, self.appbusy_factory)
+		self.tools_menu = GpxRouteToolsMenu(self.ui, self.data.routes)
 
 		# Copy our menu to the MacOSX menu
 		if self.macapp:
-			utils_gtk_macosx.adjust_menus(self.macapp, self.builder, self.on_wm_close)
+			pyapp.gtk_macosx.adjust_menus(self.macapp, self.builder, self.on_wm_close)
 			self.macapp.ready()
 
 		#------------------------
@@ -1080,6 +1044,7 @@ class GpxGUI(object):
 		# We must do this before zooming since we will not
 		# know the size of our map until we do.
 		self.main_window.show()
+		pyapp.gtk_win32.raise_window(self.main_window)
 
 		# Waypoint layer starts on top
 		self.map.raise_layer_to_top('waypoint')
@@ -1172,11 +1137,11 @@ class GpxGUI(object):
 
 		# Set the map cursor to match the tool
 		if self.tool == "tool_adjust":
-			self.map.set_cursor(gtk.gdk.Cursor(gtk.gdk.FLEUR))
+			self.map.set_cursor(gtk.gdk.FLEUR)
 		elif self.tool == "tool_draw":
-			self.map.set_cursor(gtk.gdk.Cursor(gtk.gdk.PENCIL))
+			self.map.set_cursor(gtk.gdk.PENCIL)
 		elif self.tool == "tool_delete":
-			self.map.set_cursor(gtk.gdk.Cursor(gtk.gdk.X_CURSOR))
+			self.map.set_cursor(gtk.gdk.X_CURSOR)
 		else:
 			self.map.set_cursor(None)
 
@@ -1198,11 +1163,11 @@ class GpxGUI(object):
 	def coordinates_cb(self, point):
 		if point:
 			if self.latlon_units == "deg":
-				self.coordinates_display.set_text("(%f, %f)" % point)
+				self.coordinates_display.set_text(point.as_str_decimal())
 			elif self.latlon_units == "dms":
-				self.coordinates_display.set_text("(%s, %s)" % pykarta.geometry.dms_lat_lon(*point))
+				self.coordinates_display.set_text(point.as_str_dms())
 			elif self.latlon_units == "dm":
-				self.coordinates_display.set_text("(%s, %s)" % pykarta.geometry.dm_lat_lon(*point))
+				self.coordinates_display.set_text(point.as_str_dm())
 			else:
 				raise Exception
 		else:
@@ -1313,7 +1278,7 @@ class GpxGUI(object):
 			return
 
 		# Try to load data. If we get any, zoom to it.
-		busy = self.appbusy_factory("Downloading data from GPS receiver...")
+		busy = self.ui.busy("Downloading data from GPS receiver...")
 		mark = self.data.get_mark()
 		if self.satnav.load(gpsr_index, self.data):
 			self.map.zoom_to_extent(self.data.get_bbox(mark=mark))
@@ -1325,7 +1290,8 @@ class GpxGUI(object):
 			action='open',
 			filetypes=[
 				["GPS Exchange Files", ["*.gpx", "*.gpx.gz"]],
-				["LOC Files", ["*.loc"]]
+				["LOC Files", ["*.loc"]],
+				["XML Files", ["*.xml"]],
 				]
 			)
 		if not filename:
@@ -1334,63 +1300,71 @@ class GpxGUI(object):
 
 	def on_file_import_tracks(self, widget):
 		print "File->Import Preprocessed Tracks"
+		try:
 
-		# We will look for tracks which cross the bounding box of the current map view.
-		map_bbox = self.map.get_bbox()
-
-		# Files output by gpx-track-proprocessor have the bounding box in the file name.
-		# track_20080805_44.766400,-68.710580,44.319430,-68.177950.gpx.gz
-		filename_pattern = re.compile("track_\d\d\d\d\d\d\d\d_([0-9\.-]+),([0-9\.-]+),([0-9\.-]+),([0-9\.-]+)\.")
-
-		# We use this regexp to make sure that the track actual crosses the map.
-		# Note that we are cheating: we can get away with not using an actual
-		# XML parser because we are reading only files which gpx-track-processor
-		# generated.
-		# <trkpt lat="42.096480999999997" lon="-72.724260999999998">
-		point_pattern = re.compile('<trkpt lat="([0-9\.-]+)" lon="([0-9\.-]+)">')
-
-		busy = self.appbusy_factory("Importing tracks which cross the map view...")
-		for filename in glob.glob(os.path.join(self.processed_tracks_dir, "track_*.gpx.gz")):
-			print filename
-
-			# Extract the track's bounding box from its file name.
-			m = filename_pattern.match(os.path.basename(filename))
-			assert m
-			track_bbox = pykarta.geometry.BoundingBox((float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4))))
-
-			# Start by testing whether the bounding boxes overlap. If they do,
-			# we will open the file and examine the points.
-			if map_bbox.overlaps(track_bbox):
-				print " bounding boxes overlap"
-
-				# Now open the file and perform a quick-and-dirty check to make
-				# sure at least one point is inside the map viewport.
-				fh = self.open_gz_r(filename)
-				crosses = False
-				for line in fh:
-					m = point_pattern.search(line)
-					if m:
-						point = pykarta.geometry.Point(float(m.group(1)), float(m.group(2)))
-						if map_bbox.contains_point(point):
-							crosses = True
-							break
-
-				if crosses:
-					print " crosses view"
-					if filename in self.loaded_tracks:
-						print " was already loaded"
-					else:
-						print " loading"
-						fh.rewind()
-						self.data.load_gpx(fh)
-						self.loaded_tracks.add(filename)
-
+			# We will look for tracks which cross the bounding box of the current map view.
+			map_bbox = self.map.get_bbox()
+	
+			# Files output by gpx-track-proprocessor have the bounding box in the file name.
+			# track_20080805_44.766400,-68.710580,44.319430,-68.177950.gpx.gz
+			filename_pattern = re.compile("track_\d\d\d\d\d\d\d\d_([0-9\.-]+),([0-9\.-]+),([0-9\.-]+),([0-9\.-]+)\.")
+	
+			# We use this regexp to make sure that the track actual crosses the map.
+			# Note that we are cheating: we can get away with not using an actual
+			# XML parser because we are reading only files which gpx-track-processor
+			# generated.
+			# <trkpt lat="42.096480999999997" lon="-72.724260999999998">
+			point_pattern = re.compile('<trkpt lat="([0-9\.-]+)" lon="([0-9\.-]+)">')
+	
+			progress_dialog = self.ui.progress_dialog()
+			filenames = glob.glob(os.path.join(self.processed_tracks_dir, "track_*.gpx.gz"))
+			count = 0
+			for filename in filenames:
+				print filename
+				progress_dialog.progress(count, len(filenames), _("Importing tracks which cross the map view..."))
+	
+				# Extract the track's bounding box from its file name.
+				m = filename_pattern.match(os.path.basename(filename))
+				assert m
+				track_bbox = pykarta.geometry.BoundingBox((float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4))))
+	
+				# Start by testing whether the bounding boxes overlap. If they do,
+				# we will open the file and examine the points.
+				if map_bbox.overlaps(track_bbox):
+					print " bounding boxes overlap"
+	
+					# Now open the file and perform a quick-and-dirty check to make
+					# sure at least one point is inside the map viewport.
+					fh = self.open_gz_r(filename)
+					crosses = False
+					for line in fh:
+						m = point_pattern.search(line)
+						if m:
+							point = pykarta.geometry.Point(float(m.group(1)), float(m.group(2)))
+							if map_bbox.contains_point(point):
+								crosses = True
+								break
+	
+					if crosses:
+						print " crosses view"
+						if filename in self.loaded_tracks:
+							print " was already loaded"
+						else:
+							print " loading"
+							fh.rewind()
+							self.data.load_gpx(fh)
+							self.loaded_tracks.add(filename)
+	
+				count += 1
+		except Exception as e:
+			self.ui.error_dialog_exception(_("Importing Preprocessed Tracks"), e)
+	
 	def on_file_load_photographs(self, widget):
 		print "File->Load Photographs"
 		folder = self.choose_file(title=_("Choose Folder"), action='open_folder')
 		if not folder:
 			return
-		busy = self.appbusy_factory(_("Loading photographs from %s...") % folder)
+		busy = self.ui.busy(_("Loading photographs from %s...") % folder)
 		for dirpath, dirnames, filenames in os.walk(folder):
 			for filename in fnmatch.filter(filenames, "*.jpg"):
 				full_filename = os.path.join(dirpath, filename)
@@ -1450,7 +1424,8 @@ class GpxGUI(object):
 
 	def on_file_print(self, widget):
 		print "File->Print"
-		busy = self.appbusy_factory("Printing...")
+		# FIXME: add exception handling
+		busy = self.ui.busy("Printing...")
 
 		cropbox = self.cropbox_layer.get_cropbox()
 		if cropbox:
@@ -1493,12 +1468,10 @@ class GpxGUI(object):
 	# Is it OK to close the current document?
 	def close_ok(self):
 		if self.data.get_changes():
-			dialog = self.builder.get_object("SaveCancelDiscardDialog")
-			answer = dialog.run()
-			dialog.hide()
-			if answer == 0:			# User pressed button "Close without Saving"
+			answer = self.ui.ask_save_cancel_discard()
+			if answer == "discard":
 				return True
-			elif answer == 2:		# User pressed "Save"
+			elif answer == "save":
 				if not self.save(self.save_filename):
 					return False	# save failed
 			else:					# User pressed "Cancel" or closed the dialog box
@@ -1518,7 +1491,7 @@ class GpxGUI(object):
 
 			# Add each file to the data store
 			for filename in gpx_files:
-				busy = self.appbusy_factory(_("Loading %s...") % filename)
+				busy = self.ui.busy(_("Loading %s...") % filename)
 				self.data.load_gpx(self.open_gz_r(filename))
 	
 			# If we loaded from only one file, that is the file to which we expect to save.
@@ -1531,16 +1504,19 @@ class GpxGUI(object):
 			# Bring the loaded objects into view.
 			self.map.zoom_to_extent(self.data.get_bbox())
 		except Exception, e:
-			self.ui.exception(_("Loading file"), e)
+			self.ui.error_dialog_exception(_("Loading file"), e)
 
 	# Load more data from the files named. Zoom and pan to best show the new objects.
 	def import_files(self, gpx_files):
 		mark = self.data.get_mark()
 		for filename in gpx_files:
-			busy = self.appbusy_factory(_("Importing %s...") % filename)
+			busy = self.ui.busy(_("Importing %s...") % filename)
 			if os.path.splitext(filename)[1] == ".loc":
 				import gpx_import_loc
-				gpx_import_loc.load_loc(filename, self.data)
+				gpx_import_loc.load(filename, self.data)
+			elif os.path.splitext(filename)[1] == ".xml":
+				import gpx_import_xml
+				gpx_import_xml.load(filename, self.data)
 			else:
 				self.data.load_gpx(self.open_gz_r(filename))
 		self.map.zoom_to_extent(self.data.get_bbox(mark=mark))
@@ -1557,6 +1533,7 @@ class GpxGUI(object):
 	# * If filename is None, ask the user to choose one.
 	# * Make filename the new name of the loaded file.
 	def save(self, filename):
+		# If the user has not yet chosen a filename,
 		if not filename:
 			filename = self.choose_file(
 				title="Save As",
@@ -1568,28 +1545,20 @@ class GpxGUI(object):
 			if not filename:
 				return False
 
+			# Add .gpx extension if it is missing.
 			if os.path.splitext(filename)[1] != ".gpx":
 				filename = "%s.gpx" % filename
 
 			if os.path.exists(filename):
-				if not self.ui.yesno_question(_("File exists. Overwrite?")):
+				if not self.ui.ask_yesno_question(_("File exists. Overwrite?")):
 					return False
 
-		tmpfile = "%s.tmp" % filename
-		bakfile = "%s.bak" % filename
-
-		busy = self.appbusy_factory(_("Saving to %s...") % filename)
-		f = open(tmpfile, "w")
+		busy = self.ui.busy(_("Saving to %s...") % filename)
+		f = pyapp.save.SaveOpen(filename)
 		writer = GpxWriter(f)
 		self.data.write(writer)
 		writer = None
 		f.close()
-
-		if os.path.exists(filename):
-			if os.path.exists(bakfile):
-				os.unlink(bakfile)
-			os.rename(filename, bakfile)
-		os.rename(tmpfile, filename)
 
 		self.data.clear_changes()
 		self.set_save_filename(filename)
@@ -1647,10 +1616,6 @@ class GpxGUI(object):
 			return filename
 		else:
 			return None
-
-	# Put up a watch cursor.
-	def appbusy_factory(self, message):
-		return AppBusy(self.main_window, self.ui.statusbar, message)
 
 	#==========================================================================
 	# Edit Menu
@@ -1841,18 +1806,18 @@ class GpxGUI(object):
 
 	def on_tools_assoc(self, widget):
 		print "Tools->Associate GPX and LOC files"
-		if self.ui.yesno_question(_("Do you want to associate GPX and LOC files with this program?")):
+		if self.ui.ask_yesno_question(_("Do you want to associate GPX and LOC files with this program?")):
 			import gpx_assoc
 			gpx_assoc.set_associations(self.ui)
 
 	def on_tools_update(self, widget):
 		print "Tools->Update Program"
-		busy = self.appbusy_factory("Updating program...")
+		busy = self.ui.busy("Updating program...")
 		import urllib2
 		try:
 			self.module_updaters = []
 			new_updaters = []
-			self.package_updates = utils_updater.download_simple_update(self.ui.show_status)
+			self.package_updates = pyapp.updater.download_simple_update(self.ui.show_status)
 		except urllib2.HTTPError as e:
 			self.ui.error(
 				_("The attempt to download a newer version of this application " \
@@ -1860,14 +1825,14 @@ class GpxGUI(object):
 				  "Error code: {error_code}").format(error_code=e.code)
 				)
 		except Exception as e:
-			self.ui.exception(_("Update of Application"), e)
+			self.ui.error_dialog_exception(_("Update of Application"), e)
 
 	#==========================================================================
 	# Help Menu
 	#==========================================================================
 
 	def on_help_about(self, widget):
-		app_info = utils_updater.load_package_info(os.path.join(sys.path[0], "Code_info.xml"))
+		app_info = pyapp.updater.load_package_info(os.path.join(sys.path[0], "Code_info.xml"))
 		dialog = self.builder.get_object("AboutDialog")
 		dialog.set_version(_("version {version}").format(version=app_info['display_version']))
 		answer = dialog.run()
@@ -1887,7 +1852,7 @@ class GpxGUI(object):
 			scope = "scope_within"
 
 		self.search_results.clear()
-		busy = self.appbusy_factory("Searching...")
+		busy = self.ui.busy("Searching...")
 		m = search_nominatim(search_terms, scope=scope, bbox=self.map.get_bbox())
 		if len(m) > 0:
 			bbox = pykarta.geometry.BoundingBox()

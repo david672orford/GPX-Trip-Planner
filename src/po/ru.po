@@ -168,7 +168,7 @@ msgstr ""
 
 #: gpx_gui.xml.py:41
 msgid "Pare Down Route"
-msgstr "Чистить маршрут"
+msgstr "Упростить маршрут"
 
 #: gpx_gui.xml.py:42
 msgid "Remove pink (maneuver) points from route."

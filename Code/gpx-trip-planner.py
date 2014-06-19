@@ -2,13 +2,11 @@
 #=============================================================================
 # gpx-trip-planner.py
 # Copyright 2013, Trinity College
-# Last modified: 25 April 2013
+# Last modified: 8 August 2013
 #=============================================================================
 
 import sys
 import os
-
-sys.path.insert(1, os.path.join(sys.path[0], "lib"))
 
 # Determine path to file containing socket number.
 # All of these directories are user-private.
@@ -58,12 +56,12 @@ if import_mode:
 
 import gobject
 import gtk
-import utils_i18n
-import utils_updater
+import pyapp.i18n
+import pyapp.updater
 from gpx_gui import GpxGUI
 from gpx_server import GpxServer
 
-utils_i18n.initialize(domain="gpx-trip-planner")
+pyapp.i18n.initialize(domain="gpx-trip-planner")
 
 # Needed for Osm-GPS-Map on Win32
 gobject.threads_init()
@@ -84,15 +82,11 @@ if import_mode:
 else:
 	gobject.idle_add(trip_planner.open_files, sys.argv)
 
-# Main loop
+# Start Gtk event loop.
 gtk.main()
 
-# Main loop with profiling
-#import cProfile
-#cProfile.run('gtk.main()')
-
 print "Updates:", trip_planner.package_updates
-utils_updater.install_updates(trip_planner.package_updates)
+pyapp.updater.install_updates(trip_planner.package_updates)
 
 sys.exit(0)
 

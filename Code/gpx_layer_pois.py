@@ -1,8 +1,8 @@
 #=============================================================================
 # gpx_layer_pois.py
 # POIs map layer
-# Copyright 2013, Trinity College
-# Last modified: 29 March 2013
+# Copyright 2013, 2014, Trinity College
+# Last modified: 9 May 2014
 #=============================================================================
 
 import gtk
@@ -24,7 +24,7 @@ class PoiLayer(MapLayer):
 		print "Loading POI symbols..."
 		self.symbols = PoiSymbolSet()
 		for filename in glob.glob("POIs/*.bmp"):
-			print "    %s" % filename
+			print "  %s" % filename
 			self.symbols.add_symbol(filename)
 
 		self.poi_db.add_client("map_layer", self)

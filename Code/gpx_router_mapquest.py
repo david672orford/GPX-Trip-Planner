@@ -1,17 +1,17 @@
 # gpx_router_mapquest.py
-# Copyright 2013, Trinity College
-# Last modified: 27 June 2013
+# Copyright 2013, 2014, Trinity College
+# Last modified: 28 March 2014
 
 import json
 import urllib2
 from gpx_data_gpx import GpxRoutePoint, GpxRouteShapePoint
+from pykarta.maps.tilesets import api_keys
 
 # This uses Mapquest's router for OSM data.
 # See: http://open.mapquestapi.com/directions/
 class GpxRouter(object):
 
-	#url = "http://open.mapquestapi.com/directions/v0/optimizedroute?outFormat=json"
-	url = "http://open.mapquestapi.com/directions/v1/optimizedroute?outFormat=json"
+	url = "http://open.mapquestapi.com/directions/v1/optimizedroute"
 
 	def flesh_out(self, route):
 		print "Route:", route
@@ -31,17 +31,16 @@ class GpxRouter(object):
 				},
 			}, separators=(',',':'))
 		json_text = json_text.replace('"', '')
-		print json_text
 
 		# Send the query
-		url = "%s&json=%s" % (self.url, json_text)
+		url = "%s?key=%s&outFormat=json&json=%s" % (self.url, api_keys['mapquest'], json_text)
 		print "URL:", url
 		http_resp = urllib2.urlopen(url)
 		resp = json.loads(http_resp.read())
 		#print json.dumps(resp, indent=4, separators=(',', ': '))
 
 		if resp['info']['statuscode'] != 0:
-			print "Failed to find route:", resp['info']['messages'][0]
+			raise Exception("Failed to find route: %s" % resp['info']['messages'][0])
 
 		# Keep just the part which describes the computed route.
 		resp = resp['route']

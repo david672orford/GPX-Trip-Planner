@@ -1,7 +1,7 @@
 #=============================================================================
 # gpx_data_pois.py
-# Copyright 2013, Trinity College
-# Last modified: 29 March 2013
+# Copyright 2013, 2014 Trinity College
+# Last modified: 9 May 2014
 #=============================================================================
 
 import os
@@ -69,7 +69,7 @@ class PoiDB(object):
 			print "Loading POI categories:"
 			self.cursor.execute("SELECT DISTINCT symbol from pois")
 			for row in self.cursor:
-				print "    %s" % row[0]
+				print "  %s" % row[0]
 				self.categories.add(row[0])
 
 	def add_client(self, client_name, client_obj):

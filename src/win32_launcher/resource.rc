@@ -1,4 +1,5 @@
-ID ICON "app_icon.ico"
+icon1 ICON "app_icon.ico"
+icon2 ICON "debug_console.ico"
 1 VERSIONINFO
 FILEVERSION     1,0,0,0
 PRODUCTVERSION  1,0,0,0
@@ -7,13 +8,13 @@ BEGIN
   BEGIN
     BLOCK "040904E4"
     BEGIN
-      VALUE "CompanyName", "Company name"
-      VALUE "FileDescription", "Territory Editor"
+      VALUE "CompanyName", "Trinity College"
+      VALUE "FileDescription", "Editor for GPX files"
       VALUE "FileVersion", "1.0"
-      VALUE "InternalName", "my_app"
-      VALUE "LegalCopyright", "Copyright info"
-      VALUE "OriginalFilename", "my_app.exe"
-      VALUE "ProductName", "My App"
+      VALUE "InternalName", "GPX Trip Planner"
+      VALUE "LegalCopyright", "Copyright 2013, Trinity College"
+      VALUE "OriginalFilename", "gpx-trip-planner.exe"
+      VALUE "ProductName", "GPX Trip Planner"
       VALUE "ProductVersion", "1.0"
     END
   END

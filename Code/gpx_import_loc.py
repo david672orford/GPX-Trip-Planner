@@ -1,10 +1,10 @@
 #! /usr/bin/python
 # gpx_import_loc.py
 # LOC file import support
-# Copyright 2013, Trinity College
-# Last modified: 29 March 2013
+# Copyright 2013, 2014, Trinity College
+# Last modified: 28 March 2014
 
-def load_loc(filename, datastore):
+def load(filename, datastore):
 	import xml.etree.cElementTree as ET
 	from gpx_data_gpx import GpxWaypoint
 
@@ -30,10 +30,6 @@ def load_loc(filename, datastore):
 
 # Test code
 if __name__ == "__main__":
-	import os
-	import sys
-	sys.path.insert(1, os.path.join(sys.path[0], "lib"))
-
 	class DummyDatastore(object):
 		pass
 
@@ -42,5 +38,4 @@ if __name__ == "__main__":
 	load_loc("geocaching.loc", datastore)
 	for attr in dir(datastore.waypoints[0]):
 		print attr, getattr(datastore.waypoints[0], attr)
-
 
