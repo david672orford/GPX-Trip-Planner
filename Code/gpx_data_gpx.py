@@ -1,6 +1,6 @@
 # gpx_data_gpx.py
-# Copyright 2013, Trinity College
-# Last modified: 18 July 2013
+# Copyright 2013, 2014, Trinity College
+# Last modified: 17 July 2014
 
 import gtk
 import gobject
@@ -294,6 +294,7 @@ class GpxMetadata(object):
 		for child_name in self.children:
 			setattr(self, child_name, None)
 		self.changes = False		# are their unsaved changes?
+
 	# Navigate path to metadata item (which may be in a child object)
 	# and return it.
 	def get_item(self, path):
@@ -303,6 +304,7 @@ class GpxMetadata(object):
 			if obj == None:
 				break
 		return obj
+
 	# Navigate path to metadata item and set it. Mark the metadata
 	# as changed.
 	def set_item(self, path, value):
@@ -783,7 +785,7 @@ class GpxData(xml.sax.handler.ContentHandler):
 				self.metadata.author = author
 				self.obj_stack.insert(0, author)
 			elif name == 'copyright':
-				copyright = GpxCopyright(attrs['author'])
+				copyright = GpxCopyright(attrs.get('author',''))	# required element
 				self.metadata.copyright = copyright
 				self.obj_stack.insert(0, copyright)
 			elif name == 'bounds':

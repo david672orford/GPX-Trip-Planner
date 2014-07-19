@@ -36,7 +36,15 @@
   makes operation more consistent with that of the Leaflet (leafletjs.com)
   and Pykarta's MapVectorLayer.
 
+== Post-Release Bug Fixes ==
+
 * Dropt Cloudmade layers since Cloudmade is dropping its low-usage customers.
+
+* Added missing importation of the re package in module which interprets
+  coordinate strings pasted into the program.
+
+* Will now load GPX files with a <copyright> element with no "author" attribute
+  even though such files do not conform to GPX 1.1.
 
 ==============================================================================
  Changes in version 0.81
