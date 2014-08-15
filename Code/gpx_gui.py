@@ -2,7 +2,7 @@
 #=============================================================================
 # gpx_gui.py
 # Copyright 2013, 2014, Trinity College
-# Last modified: 1 August 2014
+# Last modified: 15 August 2014
 #=============================================================================
 
 import sys
@@ -898,6 +898,7 @@ class GpxGUI(object):
 		# Create the map widget
 		#---------------------------------------------------------
 		print "Creating map widget..."
+		pykarta.maps.tilesets.tilesets.api_keys["bing"] = "AiMQM9AWZQuAHQ0UotcHHaWVvp3M1OPTGPtxLXNnXAe74Q4tL1PnF4R_vEIrQ_Ue"
 		self.map = MapWidget(tile_source=None, debug_level=0)
 		self.builder.get_object("MapVbox").pack_end(self.map)
 		self.map.set_coordinates_cb(self.coordinates_cb)

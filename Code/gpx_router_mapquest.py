@@ -1,17 +1,17 @@
 # gpx_router_mapquest.py
 # Copyright 2013, 2014, Trinity College
-# Last modified: 28 March 2014
+# Last modified: 15 August 2014
 
 import json
 import urllib2
 from gpx_data_gpx import GpxRoutePoint, GpxRouteShapePoint
-from pykarta.maps.tilesets import api_keys
 
 # This uses Mapquest's router for OSM data.
 # See: http://open.mapquestapi.com/directions/
 class GpxRouter(object):
 
 	url = "http://open.mapquestapi.com/directions/v1/optimizedroute"
+	mapquest_api_key = "Fmjtd|luub2q68n1,rx=o5-961590"
 
 	def flesh_out(self, route):
 		print "Route:", route
@@ -33,7 +33,7 @@ class GpxRouter(object):
 		json_text = json_text.replace('"', '')
 
 		# Send the query
-		url = "%s?key=%s&outFormat=json&json=%s" % (self.url, api_keys['mapquest'], json_text)
+		url = "%s?key=%s&outFormat=json&json=%s" % (self.url, mapquest_api_key, json_text)
 		print "URL:", url
 		http_resp = urllib2.urlopen(url)
 		resp = json.loads(http_resp.read())
