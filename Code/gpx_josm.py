@@ -1,6 +1,6 @@
 # gpx_josm.py
-# Copyright 2013, Trinity College
-# Last modified: 29 March 2013
+# Copyright 2013, 2014, Trinity College
+# Last modified: 1 August 2014
 
 import urllib
 import urllib2
@@ -71,8 +71,8 @@ def add_obj(obj, ui, server):
 	fh = StringIO.StringIO()
 	osm = OsmWriter(fh, "GPX Trip Planner")
 	tags = sym_to_tags.get(obj.sym, {})
-	osm.add_node(obj.lat, obj.lon, tags)
-	osm = None
+	osm.new_node(obj.lat, obj.lon, tags)
+	osm.save()
 	osm_text = fh.getvalue()
 
 	# Ask our internal HTTP server to dispense the text of the

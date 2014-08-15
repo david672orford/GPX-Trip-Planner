@@ -7,6 +7,10 @@
 
 * Visibility of tracks is not always saved properly
 
+* Wrapping around from 180 degress to -180 degrees is not handled properly.
+  POIs on only one side the line are shown and that side flips as one scrolls
+  the map center back and forth accross this meridian.
+
 == Not Yet Implemented ==
 
 * Implement Undo
@@ -14,6 +18,11 @@
 * Map improvements
  * Apply pan-zoom rules for waypoints and search results to 
    clicks on route points too.
+ * Save layers, center, and zoom level in GPX file.
+ * Fix layer ordering so that when a new reference overlay layer is
+   enabled it is placed between the top reference overlayer layer
+   and the GPX layers in the stacking order. Currently they go to
+   the bottom.
 
 * Possible Additional Search Sources
  * Google Maps

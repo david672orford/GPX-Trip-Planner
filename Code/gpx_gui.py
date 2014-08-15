@@ -2,7 +2,7 @@
 #=============================================================================
 # gpx_gui.py
 # Copyright 2013, 2014, Trinity College
-# Last modified: 22 May 2014
+# Last modified: 1 August 2014
 #=============================================================================
 
 import sys
@@ -31,6 +31,7 @@ import pykarta.geometry
 import pykarta.maps.tilesets
 from pykarta.maps.widget import MapWidget, MapPrint
 from pykarta.maps.layers import MapLayerScale, MapLayerAttribution, MapLayerCropbox, MapLayerLiveGPS
+from pykarta.maps.layers.geojson import MapGeoJSONLayer
 from pykarta.gps.live import GPSlistener
 
 import gpx_reference_layers
@@ -916,6 +917,10 @@ class GpxGUI(object):
 
 		self.mapsym_chooser = MapSymbolChooser(self.builder, self.map)
 
+		# Make symbols have full size at zoom level 16.
+		#self.map.symbols.scaler.set_params(ref_level=16)
+		self.map.symbols.scaler.set_params(ref_level=12)
+
 		#---------------------------------------------------------
 		# This keeps all of the gtk.Entry widgets with the name
 		# of the route to which points are being added showing
@@ -1430,14 +1435,18 @@ class GpxGUI(object):
 		cropbox = self.cropbox_layer.get_cropbox()
 		if cropbox:
 			width, height, margin = cropbox
+			papersize = [width, height]
 		else:
 			width = self.map.width
 			height = self.map.height
+			if width > height:
+				papersize = [792.0, 612.0]
+			else:
+				papersize = [612.0, 792.0]
 			margin = 25
-		landscape = width > height
 
 		# Create a new map object for printing with the same layers and viewport as the map widget.
-		map_printer = MapPrint(self.map, main_window=self.main_window, landscape=landscape, margin=margin)
+		map_printer = MapPrint(self.map, main_window=self.main_window, papersize=papersize, margin=margin)
 
 		result = map_printer.do_print()
 		if result is not None:
@@ -1670,11 +1679,18 @@ class GpxGUI(object):
 		menu = self.builder.get_object("MapMenu")
 
 		layers = list(gpx_reference_layers.layers)[:]
+
 		mbtiles_files = glob.glob("*.mbtiles")
 		if len(mbtiles_files) > 0:
 			layers.append(None)		# separator
 			for mbtiles_file in mbtiles_files:
 				layers.append(gpx_reference_layers.GpxTileLayer(1, mbtiles_file, mbtiles_file))
+
+		geojson_files = sorted(glob.glob("*.geojson"))
+		if len(geojson_files) > 0:
+			layers.append(None)		# separator
+			for geojson_file in geojson_files:
+				layers.append(gpx_reference_layers.GpxTileLayer(1, geojson_file, geojson_file, overlay=True))
 
 		group = None
 		sep = None
@@ -1717,6 +1733,8 @@ class GpxGUI(object):
 			for tileset_name in layer.tileset_names:
 				if tileset_name == "mapquest-traffic":
 					layer_obj = pykarta.maps.layers.mapquest.MapTrafficLayer()
+				elif tileset_name.endswith(".geojson"):
+					layer_obj = MapGeoJSONLayer(tileset_name)
 				else:
 					tileset = pykarta.maps.tilesets.tilesets[tileset_name]
 					layer_obj = pykarta.maps.layers.MapTileLayerHTTP(tileset)

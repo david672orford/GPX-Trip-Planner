@@ -2,7 +2,7 @@
 # gpx_layer_pois.py
 # POIs map layer
 # Copyright 2013, 2014, Trinity College
-# Last modified: 9 May 2014
+# Last modified: 26 July 2014
 #=============================================================================
 
 import gtk
@@ -61,7 +61,7 @@ class PoiLayer(MapLayer):
 			for poi in self.poi_db.in_bbox(bbox):
 				#print poi.oid, poi.name
 				x, y = self.containing_map.project_point(poi)
-				self.visible_objs.append((poi, x, y, self.get_symbol_renderer(poi), poi.name if zoom >= 13 else None))
+				self.visible_objs.append((poi, x, y, self.get_symbol_renderer(poi), poi.name if zoom >= 12 else None))
 
 	def do_draw(self, ctx):
 		#print "POI layer: do_draw()"

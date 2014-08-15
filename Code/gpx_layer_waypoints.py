@@ -2,7 +2,7 @@
 # gpx_layer_waypoints.py
 # Waypoint map layer
 # Copyright 2013, Trinity College
-# Last modified: 1 May 2013
+# Last modified: 28 July 2014
 #=============================================================================
 
 import gtk
@@ -64,7 +64,7 @@ class WaypointLayer(GpxVectorLayer):
 						waypoint,
 						waypoint_sym,
 						x, y,
-						waypoint.name if zoom >= 13 else None
+						waypoint.name if zoom >= 8 else None
 						])
 			waypoint_index += 1
 		self.containing_map.feedback.debug(1, " %d of %d waypoints are in view" % (len(self.visible_objs), len(self.layer_objs)))
