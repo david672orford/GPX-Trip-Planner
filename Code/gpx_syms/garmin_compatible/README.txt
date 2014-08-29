@@ -7,6 +7,10 @@ A visual representation may be found at:
 
  http://www.gpsvisualizer.com/google_maps/icons/garmin/mapsource.html
 
+Another visual representation can be found at:
+
+ http://forums.groundspeak.com/GC/index.php?showtopic=277519
+
 They are designed to represent the same concepts and objects without
 necessarily representing them in the same way. For example, the symbol for a
 truck stop on an Etrex Legend HCx is a truck seen from the front. Here it

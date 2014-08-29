@@ -2,7 +2,7 @@
 #=============================================================================
 # gpx_gui.py
 # Copyright 2013, 2014, Trinity College
-# Last modified: 15 August 2014
+# Last modified: 21 August 2014
 #=============================================================================
 
 import sys
@@ -28,10 +28,9 @@ import pyapp.save
 import pyapp.updater
 
 import pykarta.geometry
-import pykarta.maps.tilesets
+import pykarta.maps.layers
 from pykarta.maps.widget import MapWidget, MapPrint
-from pykarta.maps.layers import MapLayerScale, MapLayerAttribution, MapLayerCropbox, MapLayerLiveGPS
-from pykarta.maps.layers.geojson import MapGeoJSONLayer
+from pykarta.maps.layers import MapLayerBuilder, MapLayerScale, MapLayerAttribution, MapLayerCropbox, MapLayerLiveGPS
 from pykarta.gps.live import GPSlistener
 
 import gpx_reference_layers
@@ -48,7 +47,6 @@ from gpx_layer_tracks import TrackLayer
 from gpx_layer_search import SearchLayer
 from gpx_layer_pois import PoiLayer
 from gpx_layer_photos import PhotoLayer
-import pykarta.maps.layers.mapquest
 
 from gpx_router_mapquest import GpxRouter
 #from gpx_router_osrm import GpxRouter
@@ -898,8 +896,8 @@ class GpxGUI(object):
 		# Create the map widget
 		#---------------------------------------------------------
 		print "Creating map widget..."
-		pykarta.maps.tilesets.tilesets.api_keys["bing"] = "AiMQM9AWZQuAHQ0UotcHHaWVvp3M1OPTGPtxLXNnXAe74Q4tL1PnF4R_vEIrQ_Ue"
-		self.map = MapWidget(tile_source=None, debug_level=0)
+		pykarta.maps.layers.tilesets.api_keys["bing"] = "AiMQM9AWZQuAHQ0UotcHHaWVvp3M1OPTGPtxLXNnXAe74Q4tL1PnF4R_vEIrQ_Ue"
+		self.map = MapWidget(tile_source=None, debug_level=1)
 		self.builder.get_object("MapVbox").pack_end(self.map)
 		self.map.set_coordinates_cb(self.coordinates_cb)
 		self.map.set_zoom_cb(self.zoom_cb)
@@ -1009,7 +1007,7 @@ class GpxGUI(object):
 		#------------------------
 		# Tile debuging layer
 		#------------------------
-		#self.map.add_layer('tile_debug', pykarta.maps.layers.MapTileLayerDebug())
+		#self.map.add_layer('tile_debug', MapLayerBuilder("tile-debug"))
 
 		#---------------------------------------------------------
 		# Main menu
@@ -1729,17 +1727,11 @@ class GpxGUI(object):
 
 	# Called whenever an overlay layer is turned on or off
 	def on_overlay_layer_toggle(self, button, layer):
-		print button.get_active(), layer.tileset_names
+		print "Layer %s toggled to state %s" % (layer.tileset_names, button.get_active())
 		if button.get_active():		# if pressed in,
 			for tileset_name in layer.tileset_names:
-				if tileset_name == "mapquest-traffic":
-					layer_obj = pykarta.maps.layers.mapquest.MapTrafficLayer()
-				elif tileset_name.endswith(".geojson"):
-					layer_obj = MapGeoJSONLayer(tileset_name)
-				else:
-					tileset = pykarta.maps.tilesets.tilesets[tileset_name]
-					layer_obj = pykarta.maps.layers.MapTileLayerHTTP(tileset)
-				self.map.add_layer(tileset_name, layer_obj, overlay=True)
+				tileset_obj = MapLayerBuilder(tileset_name)
+				self.map.add_layer(tileset_name, tileset_obj, group=2)
 		else:
 			for tileset_name in layer.tileset_names:
 				self.map.remove_layer(tileset_name)
@@ -1772,7 +1764,8 @@ class GpxGUI(object):
 		if os.path.exists(self.bookmarks_filename):
 			bookmarks_file = csv.reader(codecs.open(self.bookmarks_filename, "rb", "utf-8"))
 			for name, lat, lon, zoom in bookmarks_file:
-				# FIXME: causes Python to abort if there are unicode bookmarks in non-unicode locale
+				# FIXME: causes Python to abort if there are unicode bookmarks
+				# in non-unicode locale. That is why it is commented out.
 				#print " ", name
 				self.add_bookmark_to_menu((name, float(lat), float(lon), float(zoom)))
 

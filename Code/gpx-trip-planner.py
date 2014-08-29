@@ -32,7 +32,7 @@ while len(sys.argv) >= 1 and sys.argv[0].startswith("-"):
 	elif opt.startswith("-psn_"):	# MacOSX "process serial number"
 		pass
 	else:
-		sys.stderr.write("Invalid option: %s" % opt)
+		sys.stderr.write("Invalid option: %s\n" % opt)
 		sys.exit(1)
 
 # If we are to import files, try to pass them to an existing instance.

@@ -1,15 +1,17 @@
 #=============================================================================
 # gpx_data_pois.py
 # Copyright 2013, 2014 Trinity College
-# Last modified: 9 May 2014
+# Last modified: 25 August 2014
 #=============================================================================
 
 import os
 import gtk
 import gobject
 import sqlite3
+import glob
 
 from gpx_data_gpx import GpxPoint
+from pykarta.maps.symbols import MapSymbolSet
 
 #==============================================================
 # The POI categories formatted as a list acceptable to
@@ -54,6 +56,7 @@ class PoiCategory(object):
 
 #==============================================================
 # Interface to the Sqlite database of POIs
+# This display layer connects to this.
 #==============================================================
 class PoiDB(object):
 	def __init__(self, filename):
@@ -63,14 +66,20 @@ class PoiDB(object):
 		self.cursor = None
 
 		if os.path.exists(filename):
+			print "Loading POI categories:"
 			self.conn = sqlite3.connect(filename)
 			self.cursor = self.conn.cursor()
 	
-			print "Loading POI categories:"
 			self.cursor.execute("SELECT DISTINCT symbol from pois")
 			for row in self.cursor:
 				print "  %s" % row[0]
 				self.categories.add(row[0])
+
+		print "Loading POI symbols..."
+		self.symbols = MapSymbolSet()
+		for filename in glob.glob("POIs/*.bmp"):
+			print "  %s" % filename
+			self.symbols.add_raster_symbol(filename)
 
 	def add_client(self, client_name, client_obj):
 		self._clients[client_name] = client_obj
@@ -96,6 +105,7 @@ class PoiDB(object):
 		row = self.cursor.fetchone()
 		return GpxPOI(row)
 
+# Representation of a single POI which we pass to the display layer
 class GpxPOI(GpxPoint):
 	def __init__(self, row):
 		oid, name, description, symbol, lat, lon = row

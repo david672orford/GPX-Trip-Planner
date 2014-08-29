@@ -13,7 +13,10 @@
 
 == Not Yet Implemented ==
 
-* Implement Undo
+* POIs
+ * Show pixbufs in selector
+ * Add a way to call loader by passing an option to gpx-trip-planner command.
+ * Do something useful when a POI is clicked
 
 * Map improvements
  * Apply pan-zoom rules for waypoints and search results to 
@@ -40,6 +43,7 @@
 
 * UI improvements:
  * Hide mode buttons which are not supported
+ * Implement Undo
 
 * Garmin support
  * Import from a turned-off GPS produces an GPX parse error. We should

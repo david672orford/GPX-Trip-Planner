@@ -2,16 +2,17 @@
 # gpx_layer_pois.py
 # POIs map layer
 # Copyright 2013, 2014, Trinity College
-# Last modified: 26 July 2014
+# Last modified: 25 August 2014
+#
+# This is a static layer which displays POI icons loaded from CSV files
+# by gpx_data_poi.py.  This is used for displaying POIs downloaded from
+# websites such as <http://www.poi-factory.com/>. 
 #=============================================================================
 
 import gtk
-import glob
-import os
 
 from pykarta.maps.layers import MapLayer
 import pykarta.draw
-from pykarta.maps.image_loaders import surface_from_file
 
 class PoiLayer(MapLayer):
 	def __init__(self, poi_db):
@@ -21,16 +22,10 @@ class PoiLayer(MapLayer):
 		self.visible_objs = []
 		self.selected_path = None
 
-		print "Loading POI symbols..."
-		self.symbols = PoiSymbolSet()
-		for filename in glob.glob("POIs/*.bmp"):
-			print "  %s" % filename
-			self.symbols.add_symbol(filename)
-
 		self.poi_db.add_client("map_layer", self)
 
 	def set_tool(self, tool):
-		if tool != None and tool != "tool_select":
+		if tool is not None and tool != "tool_select":
 			raise NotImplementedError
 		self.tool = tool
 		self.containing_map.queue_draw()
@@ -47,7 +42,7 @@ class PoiLayer(MapLayer):
 	#	self.containing_map.queue_draw()
 
 	def get_symbol_renderer(self, poi):
-		symbol = self.symbols.get_symbol(poi.sym)
+		symbol = self.poi_db.symbols.get_symbol(poi.sym)
 		if not symbol:
 			symbol = self.containing_map.symbols.get_symbol("Dot")
 		return symbol.get_renderer(self.containing_map)
@@ -88,42 +83,4 @@ class PoiLayer(MapLayer):
 				return True
 
 		return False
-
-class PoiSymbolSet(object):
-	def __init__(self):
-		self.symbols = {}
-	def add_symbol(self, filename):
-		symbol = PoiSymbol(filename)
-		self.symbols[symbol.name] = symbol
-	def get_symbol(self, name, default=None):
-		if name in self.symbols:
-			return self.symbols[name]
-		elif default is not None and default in self.symbols:
-			return self.symbols[default]
-		else:
-			return None
-
-class PoiSymbol(object):
-	def __init__(self, filename):
-		self.surface = surface_from_file(filename)
-		basename = os.path.basename(filename)
-		base, ext = os.path.splitext(basename)
-		self.name = base
-		self.scale = 0.5
-		self.label_offset = 12 * self.scale
-		self.x_size = 20 * self.scale
-		self.hit_box = 12 * self.scale
-		self.anchor_x = 12		# not scaled
-		self.anchor_y = 12
-	def get_renderer(self, containing_map):
-		return self
-	def blit(self, ctx, x, y):
-		ctx.save()
-		ctx.translate(x, y)
-		ctx.scale(self.scale, self.scale)
-		ctx.set_source_surface(self.surface, 0-self.anchor_x, 0-self.anchor_y)
-		ctx.paint()
-		ctx.restore()
-	def hit(self, x, y):
-		return abs(x) <= self.hit_box and abs(y) <= self.hit_box
 
