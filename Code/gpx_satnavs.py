@@ -1,7 +1,7 @@
 # gpx_satnavs.py
-# Copyright 2013, Trinity College
+# Copyright 2013, 2014, Trinity College
 # Interface to GPS navigators
-# Last modified: 23 December 2013
+# Last modified: 1 September 2014
 
 import sys
 import subprocess
@@ -209,10 +209,11 @@ class GpxGpsrTomtomMS(object):
 		from pykarta.formats.tomtom_itn import ItnPoint, ItnWriter
 		filename = os.path.join(self.itn_path, "%s.itn" % obj.name)
 		print "Creating:", filename
-		writer = ItnWriter()
+		writer = ItnWriter(open(filename, "w"))
 		for point in obj:
 			writer.add(ItnPoint(point.lat, point.lon, point.desc, point.type == 'stop'))
-		writer.write(open(filename, "w"))
+		writer.save()
+		writer.write()
 		return filename
 
 #=============================================================================

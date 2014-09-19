@@ -2,7 +2,7 @@
 #=============================================================================
 # gpx_gui.py
 # Copyright 2013, 2014, Trinity College
-# Last modified: 21 August 2014
+# Last modified: 19 September 2014
 #=============================================================================
 
 import sys
@@ -27,11 +27,12 @@ import pyapp.csv_unicode as csv
 import pyapp.save
 import pyapp.updater
 
+import pykarta
 import pykarta.geometry
-import pykarta.maps.layers
 from pykarta.maps.widget import MapWidget, MapPrint
 from pykarta.maps.layers import MapLayerBuilder, MapLayerScale, MapLayerAttribution, MapLayerCropbox, MapLayerLiveGPS
 from pykarta.gps.live import GPSlistener
+from pykarta.misc.josm import Josm, JosmNotListening
 
 import gpx_reference_layers
 import gpx_colors
@@ -574,6 +575,7 @@ class GpxEditMenu(object):
 		self.satnav = gpsr
 		self.ui = ui
 		self.map = map
+		self.josm = None
 		self.server = None
 
 		self.active_layer_name = None
@@ -599,11 +601,14 @@ class GpxEditMenu(object):
 		self.menu_delete.connect("activate", self.on_delete)
 		self.menu_split = builder.get_object("menu_edit_split")
 		self.menu_split.connect("activate", self.on_split)
-		self.menu_sync_josm = builder.get_object("menu_edit_sync_josm")
+
+		# Actually in the Tools menu now
+		self.menu_sync_josm = builder.get_object("menu_tools_sync_josm")
 		self.menu_sync_josm.connect("activate", self.on_sync_josm)
-		self.menu_waypoint_to_josm = builder.get_object("menu_edit_waypoint_to_josm")
+		self.menu_waypoint_to_josm = builder.get_object("menu_tools_waypoint_to_josm")
 		self.menu_waypoint_to_josm.connect("activate", self.on_waypoint_to_josm)
 
+		# Actually in the toobar
 		self.button_send_to_gpsr = builder.get_object("gpsr_send_to")
 		self.button_send_to_gpsr.connect("clicked", self.on_send_to_gpsr)
 		self.satnav_list = builder.get_object("gpsr_selector")
@@ -707,11 +712,27 @@ class GpxEditMenu(object):
 		self.layer_data[self.active_layer_name].split(self.layer_selections[self.active_layer_name])
 
 	def on_sync_josm(self, widget):
-		gpx_josm.sync_view_and_load(self.map.get_bbox())
+		print "Tools->Load View in JOSM"
+		try:
+			if self.josm is None:
+				self.josm = Josm()
+			self.josm.cmd_imagery()
+			self.josm.cmd_load_and_zoom(self.map.get_bbox())
+		except JosmNotListening:
+			self.ui.error(_("JOSM either is not running or remote control is disabled."))
+		except Exception as e:
+			self.ui.error_dialog_exception(_("Send remote control command to JOSM"), e)
 
 	def on_waypoint_to_josm(self, widget):
-		print "Edit->Send to JOSM"
-		gpx_josm.add_obj(self.get_selected_obj(), self.ui, self.server)
+		print "Edit->Send Waypoing to JOSM"
+		try:
+			if self.josm is None:
+				self.josm = Josm()
+			gpx_josm.add_obj(self.get_selected_obj(), self.ui, self.josm, self.server)
+		except pykarta.misc.josm.JosmNotListening:
+			self.ui.error(_("JOSM either is not running or remote control is disabled."))
+		except Exception as e:
+			self.ui.error_dialog_exception(_("Send remote control command to JOSM"), e)
 
 	def on_send_to_gpsr(self, widget):
 		print "Send to GPSr"
@@ -842,7 +863,7 @@ class GpxGUI(object):
 		#------------------------
 		self.builder = gtk.Builder()
 		self.builder.set_translation_domain(gettext.textdomain())
-		self.builder.add_from_file(os.path.join(sys.path[0], "gpx_gui.xml"))
+		self.builder.add_from_file(os.path.join(sys.path[0], "gpx_gui.glade"))
 		self.builder.connect_signals(self)
 
 		# Elements to which we will refer frequently
@@ -896,8 +917,8 @@ class GpxGUI(object):
 		# Create the map widget
 		#---------------------------------------------------------
 		print "Creating map widget..."
-		pykarta.maps.layers.tilesets.api_keys["bing"] = "AiMQM9AWZQuAHQ0UotcHHaWVvp3M1OPTGPtxLXNnXAe74Q4tL1PnF4R_vEIrQ_Ue"
-		self.map = MapWidget(tile_source=None, debug_level=1)
+		pykarta.api_keys["bing"] = "AiMQM9AWZQuAHQ0UotcHHaWVvp3M1OPTGPtxLXNnXAe74Q4tL1PnF4R_vEIrQ_Ue"
+		self.map = MapWidget(tile_source=None, debug_level=5)
 		self.builder.get_object("MapVbox").pack_end(self.map)
 		self.map.set_coordinates_cb(self.coordinates_cb)
 		self.map.set_zoom_cb(self.zoom_cb)
@@ -1028,7 +1049,7 @@ class GpxGUI(object):
 		self.edit_menu.set_layer("waypoint")
 
 		# Create menu items for the map layers
-		self.init_view_map_tiles()
+		self.init_map_layers()
 
 		# Initialize Bookmarks menu
 		self.init_bookmarks()
@@ -1064,6 +1085,7 @@ class GpxGUI(object):
 		# the map widget is shown since it sets the cursor of the map widget.
 		self.set_tool('tool_select')
 
+	# FIXME: comment needed
 	def set_server(self, server):
 		self.edit_menu.server = server
 
@@ -1184,6 +1206,85 @@ class GpxGUI(object):
 	def on_configure(self, widget, event):
 		#print "Window size:", event.width, event.height
 		return False
+
+	#==========================================================================
+	# Map layers
+	#==========================================================================
+
+	# Add menu options for the map layers
+	def init_map_layers(self):
+		i = 0	# after first separator
+		self.map_menu = menu = gtk.Menu()
+
+		# Start with the hardcoded layers
+		layers = list(gpx_reference_layers.layers)[:]
+
+		# Add local tilesets
+		mbtiles_files = glob.glob("*.mbtiles")
+		if len(mbtiles_files) > 0:
+			layers.append(None)		# separator
+			for mbtiles_file in mbtiles_files:
+				layers.append(gpx_reference_layers.GpxTileLayer(1, mbtiles_file, mbtiles_file))
+
+		# Add local GeoJSON overlays
+		geojson_files = sorted(glob.glob("*.geojson"))
+		if len(geojson_files) > 0:
+			layers.append(None)		# separator
+			for geojson_file in geojson_files:
+				layers.append(gpx_reference_layers.GpxTileLayer(1, geojson_file, geojson_file, overlay=True))
+
+		group = None
+		sep = None
+		for layer in layers:
+			if layer:
+				if layer.overlay:
+					menuitem = gtk.CheckMenuItem(label=layer.display_name)
+					menuitem.connect("activate", self.on_overlay_layer_toggle, layer)
+				else:
+					menuitem = gtk.RadioMenuItem(group=group, label=layer.display_name)
+					menuitem.connect("activate", self.on_base_layer_change, layer)
+					if group is None:
+						group = menuitem
+				if layer.tooltip:
+					menuitem.set_tooltip_text(layer.tooltip)
+				if layer.default:
+					menuitem.set_active(True)
+			else:	# separator
+				menuitem = gtk.SeparatorMenuItem()
+				sep = menuitem
+			menu.insert(menuitem, i)
+			if layer is not None and layer.importance <= 1:
+				if sep:
+					sep.show()
+				menuitem.show()
+			i += 1
+
+	# Called when the button which pops up the menu pressed.
+	def on_map_menu(self, button, gdkevent):
+		print "Opening map menu..."
+		x, y = self.main_window.window.get_origin()
+		x += button.allocation.x
+		y += button.allocation.y
+		y += button.allocation.height
+		self.map_menu.popup(None, None, lambda menu, user_data: (x, y, True), gdkevent.button, gdkevent.time, None)
+
+	# Called whenever the base map layer is changed
+	def on_base_layer_change(self, button, layer):
+		if button.get_active():		# If button pressed in,
+			print "Changing tile source to %s" % str(layer.tileset_names)
+			self.map.set_tile_source(layer.tileset_names)
+			self.builder.get_object("MapMenuButton").set_label(layer.display_name)
+
+	# Called whenever an overlay layer is turned on or off
+	def on_overlay_layer_toggle(self, button, layer):
+		print "Layer %s toggled to state %s" % (layer.tileset_names, button.get_active())
+		if button.get_active():		# if pressed in,
+			for tileset_name in layer.tileset_names:
+				tileset_obj = MapLayerBuilder(tileset_name)
+				self.map.add_layer(tileset_name, tileset_obj, group=2)
+		else:
+			for tileset_name in layer.tileset_names:
+				self.map.remove_layer(tileset_name)
 
 	#==========================================================================
 	# Key bindings
@@ -1447,6 +1548,7 @@ class GpxGUI(object):
 		# Create a new map object for printing with the same layers and viewport as the map widget.
 		map_printer = MapPrint(self.map, main_window=self.main_window, papersize=papersize, margin=margin)
 
+		# Actually print
 		result = map_printer.do_print()
 		if result is not None:
 			self.ui.error(_("Printing failed: %s") % result)
@@ -1653,11 +1755,12 @@ class GpxGUI(object):
 			self.sidebar.hide()
 		self.mac_sync_menubar()
 
+	# Changes the number of map layers offered
 	def on_view_maps(self, menuitem):
 		if menuitem.get_active():
 			choice = int(gtk.Buildable.get_name(menuitem).split(":")[1])
 			print "View->Map Choices:", choice
-			menus = self.builder.get_object("MapMenu").get_children()
+			menus = self.map_menu.get_children()
 			sep = None
 			for layer in gpx_reference_layers.layers:
 				menu = menus.pop(0)
@@ -1672,70 +1775,7 @@ class GpxGUI(object):
 					menu.hide()
 					sep = menu
 
-	# Add menu options for the map layers
-	def init_view_map_tiles(self):
-		i = 0	# after first separator
-		menu = self.builder.get_object("MapMenu")
-
-		layers = list(gpx_reference_layers.layers)[:]
-
-		mbtiles_files = glob.glob("*.mbtiles")
-		if len(mbtiles_files) > 0:
-			layers.append(None)		# separator
-			for mbtiles_file in mbtiles_files:
-				layers.append(gpx_reference_layers.GpxTileLayer(1, mbtiles_file, mbtiles_file))
-
-		geojson_files = sorted(glob.glob("*.geojson"))
-		if len(geojson_files) > 0:
-			layers.append(None)		# separator
-			for geojson_file in geojson_files:
-				layers.append(gpx_reference_layers.GpxTileLayer(1, geojson_file, geojson_file, overlay=True))
-
-		group = None
-		sep = None
-		for layer in layers:
-			if layer:
-				if layer.overlay:
-					menuitem = gtk.CheckMenuItem(label=layer.display_name)
-					menuitem.connect("activate", self.on_overlay_layer_toggle, layer)
-				else:
-					menuitem = gtk.RadioMenuItem(group=group, label=layer.display_name)
-					menuitem.connect("activate", self.on_base_layer_change, layer)
-					if group is None:
-						group = menuitem
-				if layer.tooltip:
-					menuitem.set_tooltip_text(layer.tooltip)
-				if layer.default:
-					menuitem.set_active(True)
-			else:	# separator
-				menuitem = gtk.SeparatorMenuItem()
-				sep = menuitem
-			menu.insert(menuitem, i)
-			if layer is not None and layer.importance <= 1:
-				if sep:
-					sep.show()
-				menuitem.show()
-			i += 1
-
-	# Called whenever the base map layer is changed
-	def on_base_layer_change(self, button, layer):
-		if button.get_active():		# If button pressed in,
-			print "Changing tile source to %s" % str(layer.tileset_names)
-			self.map.set_tile_source(layer.tileset_names)
-			self.builder.get_object("MapMenuButton").set_label(layer.display_name)
-			#self.mac_sync_menubar()
-
-	# Called whenever an overlay layer is turned on or off
-	def on_overlay_layer_toggle(self, button, layer):
-		print "Layer %s toggled to state %s" % (layer.tileset_names, button.get_active())
-		if button.get_active():		# if pressed in,
-			for tileset_name in layer.tileset_names:
-				tileset_obj = MapLayerBuilder(tileset_name)
-				self.map.add_layer(tileset_name, tileset_obj, group=2)
-		else:
-			for tileset_name in layer.tileset_names:
-				self.map.remove_layer(tileset_name)
-
+	# Overlay printed-page crop lines on the map?
 	def on_view_crop_lines(self, button):
 		if button.get_active():
 			button_name = gtk.Buildable.get_name(button)

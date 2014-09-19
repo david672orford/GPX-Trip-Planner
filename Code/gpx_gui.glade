@@ -10,7 +10,7 @@
     <property name="transient_for">MainWindow</property>
     <property name="program_name">GPX Trip Planner</property>
     <property name="version">X.XX</property>
-    <property name="authors">Tomash Pilshchik</property>
+    <property name="authors">David Chappell</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="aboutdialog-vbox1">
         <property name="can_focus">False</property>
@@ -45,7 +45,9 @@
   <object class="GtkDialog" id="CreateBookmarkDialog">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
+    <property name="title" translatable="yes">Add Map Bookmark</property>
     <property name="type_hint">dialog</property>
+    <property name="transient_for">MainWindow</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox10">
         <property name="visible">True</property>
@@ -396,30 +398,6 @@
                         <property name="use_stock">True</property>
                       </object>
                     </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem" id="edit_sep1">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_action_appearance">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="menu_edit_sync_josm">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_action_appearance">False</property>
-                        <property name="label" translatable="yes">Sync JOSM's View</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="menu_edit_waypoint_to_josm">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_action_appearance">False</property>
-                        <property name="label">Send Waypoint to JOSM</property>
-                      </object>
-                    </child>
                   </object>
                 </child>
               </object>
@@ -724,7 +702,33 @@ into the next maneuver point.</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkSeparatorMenuItem" id="menu_tools_spacer2">
+                      <object class="GtkSeparatorMenuItem" id="menu_tools_spacer_2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_action_appearance">False</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="menu_tools_sync_josm">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="label" translatable="yes">Load View in JOSM</property>
+						<property name="tooltip_text" translatable="yes">Send a remote control command to the Openstreetmap editor JOSM to load the area shown in this program.</property>
+                        <property name="use_underline">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="menu_tools_waypoint_to_josm">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="label">Send Waypoint to JOSM</property>
+						<property name="tooltip_text" translatable="yes">Send a remote control command to the Openstreetmap editor JOSM to add a point to the map at a position of this waypoing.</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem" id="menu_tools_spacer_3">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                       </object>
@@ -3411,35 +3415,16 @@ into the next maneuver point.</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkFrame" id="MapMenubarFrame">
+                      <object class="GtkButton" id="MapMenuButton">
+                        <property name="label" translatable="yes">Basemap Name</property>
+                        <property name="width_request">130</property>
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label_xalign">0</property>
-                        <property name="shadow_type">in</property>
-                        <child>
-                          <object class="GtkMenuBar" id="MapMenubar">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="ubuntu_local">True</property>
-                            <child>
-                              <object class="GtkMenuItem" id="MapMenuButton">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="use_action_appearance">False</property>
-                                <child type="submenu">
-                                  <object class="GtkMenu" id="MapMenu">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="ubuntu_local">True</property>
-                                  </object>
-                                </child>
-                              </object>
-                            </child>
-                          </object>
-                        </child>
-                        <child type="label_item">
-                          <placeholder/>
-                        </child>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="tooltip_text" translatable="yes">Select the background map and overlays.</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="xalign">0</property>
+                        <signal name="button-press-event" handler="on_map_menu" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -4530,7 +4515,7 @@ into the next maneuver point.</property>
     </columns>
     <data>
       <row>
-        <col id="0"></col>
+        <col id="0"/>
       </row>
       <row>
         <col id="0">stop</col>

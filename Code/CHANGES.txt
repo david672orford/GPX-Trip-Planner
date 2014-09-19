@@ -4,6 +4,10 @@
 
 * Added page size Tabloid (17x11)
 
+* Added Garmin-compatible GPX symbols "Circle, Red", "Circle, Green",
+  "Circle, Blue"
+
+
 ==============================================================================
  Changes in version 0.90
 ==============================================================================

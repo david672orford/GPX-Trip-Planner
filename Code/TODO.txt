@@ -1,55 +1,45 @@
-== Possible Map Layers ==
+* Bugs
+ * Visibility of tracks is not always saved properly
+ * Wrapping around from 180 degress to -180 degrees is not handled properly.
+   POIs on only one side the line are shown and that side flips as one scrolls
+   the map center back and forth accross this meridian.
+  * Import from a turned-off GPS produces an GPX parse error. We should
+    to try get an error message which specificly names the cause
+  * Import of tracks (over the Garmin USB protocol) produces one multi-segment
+    track whereas the GPX files which the GPSr writes itself to the SD card
+    has multiple tracks. It would be more useful to have multiple tracks
+    in both cases.
 
-* Lots of new layers at:
-  http://wiki.openstreetmap.org/wiki/Tile_servers
-
-== Bugs ==
-
-* Visibility of tracks is not always saved properly
-
-* Wrapping around from 180 degress to -180 degrees is not handled properly.
-  POIs on only one side the line are shown and that side flips as one scrolls
-  the map center back and forth accross this meridian.
-
-== Not Yet Implemented ==
-
-* POIs
- * Show pixbufs in selector
- * Add a way to call loader by passing an option to gpx-trip-planner command.
- * Do something useful when a POI is clicked
+* Implement Undo (long term goal)
 
 * Map improvements
  * Apply pan-zoom rules for waypoints and search results to 
    clicks on route points too.
  * Save layers, center, and zoom level in GPX file.
- * Fix layer ordering so that when a new reference overlay layer is
-   enabled it is placed between the top reference overlayer layer
-   and the GPX layers in the stacking order. Currently they go to
-   the bottom.
-
-* Possible Additional Search Sources
- * Google Maps
- * Geocaching.com
- * Opencaching.us, etc.
- * Geonames.org
-
-* Geocoded image display
- * Support display of images linked to in waypoints
+ * Change the waypoint, and route layer to use the same drawing
+   semantics as pykarta.map.layers.vector (which follows the 
+   example of Leaflet).
 
 * Improve GPX format support:
  * namespace support is a hack
  * Garmin waypoint address extensions
  * Geocaching extensions
+ * Display images linked to in waypoints, perhaps in the geocoded
+   images tab
+* Possible Map Layers
+ * Wikipedia POIs: https://m.mediawiki.org/wiki/Extension:GeoData
+ * Geocaching.com
+ * Opencaching.us, etc.
 
-* UI improvements:
- * Hide mode buttons which are not supported
- * Implement Undo
+* Possible Search Sources 
+ * Google Maps
+ * Geonames.org
 
-* Garmin support
- * Import from a turned-off GPS produces an GPX parse error. We should
-   to try get an error message which specificly names the cause
- * Import of tracks (over the Garmin USB protocol) produces one multi-segment
-   track whereas the GPX files which the GPSr writes itself to the SD card
-   has multiple tracks. It would be more useful to have multiple tracks
-   in both cases.
+* POIs Layer
+ * Show pixbufs in selector
+ * Add a way to call POI loader (which loads them into the Sqlite database)
+   by passing an option to gpx-trip-planner command. Or maybe have it 
+   import CSV files using a dependancy system.
+ * Should the BMP files be imported into the Sqlite database as blobs?
+ * Do something useful (such as displaying a popup) when a POI is clicked.
 

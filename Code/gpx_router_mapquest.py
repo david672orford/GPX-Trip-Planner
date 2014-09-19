@@ -1,6 +1,6 @@
 # gpx_router_mapquest.py
 # Copyright 2013, 2014, Trinity College
-# Last modified: 15 August 2014
+# Last modified: 5 September 2014
 
 import json
 import urllib2
@@ -33,7 +33,7 @@ class GpxRouter(object):
 		json_text = json_text.replace('"', '')
 
 		# Send the query
-		url = "%s?key=%s&outFormat=json&json=%s" % (self.url, mapquest_api_key, json_text)
+		url = "%s?key=%s&outFormat=json&json=%s" % (self.url, self.mapquest_api_key, json_text)
 		print "URL:", url
 		http_resp = urllib2.urlopen(url)
 		resp = json.loads(http_resp.read())
