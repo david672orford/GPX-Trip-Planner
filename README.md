@@ -7,8 +7,8 @@ Install PyGTK+, Cairo, and RSVG:
 
 Check out GPX Trip Planner and supporting libraries:
 
-    $ mkdir GPX_Trip_Planner
-    $ cd GPX_Trip_Planner
+    $ mkdir david672orford
+    $ cd david672orford
     $ mkdir pygtk
     $ cd pygtk
     $ git clone https://github.com/david672orford/pykarta.git
@@ -16,6 +16,7 @@ Check out GPX Trip Planner and supporting libraries:
     $ cd ..
     $ git clone https://github.com/david672orford/GPX_Trip_Planner.git
 
-Start:
+Launch GPX Trip Planner:
+
     $ ./GPX_Trip_Planner/gpx-trip-planner
 
