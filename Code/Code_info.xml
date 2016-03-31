@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <AppUpdate>
-	<DisplayVersion>0.90</DisplayVersion>
+	<DisplayVersion>0.91</DisplayVersion>
 	<UpdateVersion>94</UpdateVersion>
 	<DistribDirURL>http://gpx.osm.trincoll.edu</DistribDirURL>
 	<DistribDirSSH>hatter:/home/chappell/openstreetmap/osm.trincoll.edu/gpx</DistribDirSSH>

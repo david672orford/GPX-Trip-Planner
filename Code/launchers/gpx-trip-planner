@@ -1,15 +1,26 @@
 #! /bin/sh
 # gpx-trip-planner
+# GPX Trip Planner Launcher for Linux
+
+# Errors are fatal
 set -e
 
+# Change to the directory where this script is found.
+starting_dir=`pwd`
+cd "`dirname $0`"
+bundle_root=`pwd`
+
 # This is used to set up desktop file associations on Linux.
-LAUNCHER="$0"
+LAUNCHER="$bundle_root/`basename $0`"
+echo "LAUNCHER=$LAUNCHER"
 export LAUNCHER
 
 profile_dir="$HOME/Documents/GPX Trip Planner"
 if [ -z "$1" -a -d "$profile_dir" ]
 	then
 	cd "$profile_dir"
+	else
+	cd "$starting_dir"
 	fi
 
-python `dirname $LAUNCHER`/Code/gpx-trip-planner.py --profile-dir="$profile_dir" "$@"
+python "$bundle_root/Code/gpx-trip-planner.py" --profile-dir="$profile_dir" "$@"
