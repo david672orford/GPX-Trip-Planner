@@ -2,7 +2,7 @@ This is a viewer and editor for GPX files. It uses the Pykarta map library.
 
 Install PyGTK+, Cairo, and RSVG:
 
-   $ sudo apt-get install python-gtk2 python-cairo python-rsvg
+    $ sudo apt-get install python-gtk2 python-cairo python-rsvg
 
 Check out GPX Trip Planner and supporting libraries:
 
