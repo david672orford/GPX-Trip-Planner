@@ -1,11 +1,13 @@
 #! /usr/bin/python
 # gpx-poi-loader.py
-# Last modified: 10 August 2013
+# Processes CSV POI files from www.poi-factory.com
+# Last modified: 28 October 2014
 
 import pyapp.csv_unicode as csv
 import sqlite3
 import os
 import glob
+import codecs
 
 db_filename = "pois.sqlite"
 
@@ -24,7 +26,7 @@ for filename in glob.glob("*.csv"):
 	print filename
 	basename = os.path.basename(filename)
 	base, ext = os.path.splitext(basename)
-	data = csv.reader(open(filename, "rb"))
+	data = csv.reader(codecs.open(filename, "rb", "latin1"))
 	linenum = 1
 	try:
 		for row in data:

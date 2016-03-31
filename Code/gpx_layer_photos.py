@@ -1,8 +1,8 @@
 #=============================================================================
 # gpx_layer_photos.py
 # Photos map layer
-# Copyright 2013, Trinity College
-# Last modified: 31 March 2013
+# Copyright 2013, 2014, Trinity College
+# Last modified: 7 November 2013
 #=============================================================================
 
 import gtk
@@ -20,10 +20,10 @@ class PhotoLayer(MapLayer):
 		self.layer_objs.add_client("map_layer", self)
 
 	def set_tool(self, tool):
-		if tool != None and tool != "tool_select":
+		if tool is not None and tool != "tool_select_adjust":
 			raise NotImplementedError
 		self.tool = tool
-		self.containing_map.queue_draw()
+		self.redraw()
 		return _("Photos are now clickable.")
 
 	def on_select(self, path, source, client_name):
@@ -34,7 +34,7 @@ class PhotoLayer(MapLayer):
 				self.containing_map.set_center_and_zoom_in(photo.lat, photo.lon, 14)
 			else:
 				self.containing_map.make_visible(photo.lat, photo.lon)
-		self.containing_map.queue_draw()
+		self.redraw()
 
 	def do_viewport(self):
 		self.visible_objs = []
@@ -67,7 +67,7 @@ class PhotoLayer(MapLayer):
 				print "Hit photo:", photo.name
 				self.selected_path = (photo_index,)
 				self.layer_objs.select(self.selected_path, 'map_layer')
-				self.containing_map.queue_draw()
+				self.redraw()
 				return True
 
 		return False

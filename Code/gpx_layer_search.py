@@ -1,27 +1,28 @@
 #=============================================================================
 # gpx_layer_search.py
 # Search results map layer
-# Copyright 2013, Trinity College
-# Last modified: 1 May 2013
+# Copyright 2013, 2014, Trinity College
+# Last modified: 7 November 2014
 #=============================================================================
 
 import math
 import gtk
 
-from gpx_layer import GpxVectorLayer
+from pykarta.maps.layers import MapLayer
 
-class SearchLayer(GpxVectorLayer):
+class SearchLayer(MapLayer):
 	def __init__(self, data):
-		GpxVectorLayer.__init__(self)
-
+		MapLayer.__init__(self)
+		self.tool = None
 		self.layer_objs = data
 		self.layer_objs.add_client('map_layer', self)
-
+		self.visible_objs = []
+		self.selected_path = None
 		self.radius = None
 	
 	def on_select(self, path, source, client_name):
 		self.selected_path = path
-		if path != None:
+		if path is not None:
 			match = self.layer_objs[path[0]]
 			if source == 'treeview_double_click':
 				self.containing_map.set_center_and_zoom_in(match.lat, match.lon, match.zoom)
@@ -29,13 +30,15 @@ class SearchLayer(GpxVectorLayer):
 				self.containing_map.make_visible(match.lat, match.lon)
 			if match.polygonpoints:
 				self.containing_map.make_visible_polygon(match.polygonpoints)
-		self.containing_map.queue_draw()
+		self.redraw()
 
 	def set_tool(self, tool):
-		if tool != None and tool != "tool_select":
+		if tool is None:
+			pass
+		elif tool == "tool_select_adjust":
+			return _("Search result locations are circled on map. Click on them.")
+		else:
 			raise NotImplementedError
-		GpxVectorLayer.set_tool(self, tool)
-		return _("Search result locations are circled on map. Click on them.")
 
 	def do_viewport(self):
 		self.visible_objs = []
@@ -98,7 +101,7 @@ class SearchLayer(GpxVectorLayer):
 				print "Hit search result point"
 				self.selected_path = (match_index,)
 				self.layer_objs.select(self.selected_path, "map_layer")
-				self.containing_map.queue_draw()
+				self.redraw()
 				return True
 
 		return False

@@ -3,7 +3,7 @@ set -e
 cd ..
 
 # Pack the code
-tar zhcvf Code.tar.gz Code
+tar --exclude '.git*' --exclude '*.pyc' -zhcvf Code.tar.gz Code
 
 # Get the SSH address of the distribution point
 target=`perl -n -e 'if(m#<DistribDirSSH>([^<]+)</DistribDirSSH>#) { print $1,"\n" }' <Code/Code_info.xml`

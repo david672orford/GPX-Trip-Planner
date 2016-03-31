@@ -1,8 +1,8 @@
 # coding=utf-8
 #=============================================================================
 # gpx_gui.py
-# Copyright 2013, 2014, Trinity College
-# Last modified: 19 September 2014
+# Copyright 2013, 2014, 2015, Trinity College
+# Last modified: 18 August 2015
 #=============================================================================
 
 import sys
@@ -311,7 +311,7 @@ class GpxForm(object):
 				setattr(obj, field_name, value)	
 				self.data.touch(self._selected)
 			else:
-				print "Form is empty"
+				#print "Form is empty"
 				gtk.gdk.beep()
 				widget.set_text("")
 
@@ -869,6 +869,7 @@ class GpxGUI(object):
 		# Elements to which we will refer frequently
 		self.main_window = self.builder.get_object("MainWindow")
 		self.sidebar = self.builder.get_object("Sidebar")
+		self.sidebar_notebook = self.builder.get_object("SidebarNotebook")
 		self.mode_selector = self.builder.get_object("ModeSelector")
 		self.coordinates_display = self.builder.get_object("CoordinatesDisplay")
 		self.zoom_display = self.builder.get_object("ZoomDisplay")
@@ -918,7 +919,8 @@ class GpxGUI(object):
 		#---------------------------------------------------------
 		print "Creating map widget..."
 		pykarta.api_keys["bing"] = "AiMQM9AWZQuAHQ0UotcHHaWVvp3M1OPTGPtxLXNnXAe74Q4tL1PnF4R_vEIrQ_Ue"
-		self.map = MapWidget(tile_source=None, debug_level=5)
+		pykarta.api_keys["mapzen"] = "{api_key}"
+		self.map = MapWidget(tile_source=None, debug_level=1)
 		self.builder.get_object("MapVbox").pack_end(self.map)
 		self.map.set_coordinates_cb(self.coordinates_cb)
 		self.map.set_zoom_cb(self.zoom_cb)
@@ -1083,7 +1085,7 @@ class GpxGUI(object):
 
 		# Tell it which tool is seleted at startup. This must be done after
 		# the map widget is shown since it sets the cursor of the map widget.
-		self.set_tool('tool_select')
+		self.set_tool('tool_select_adjust')
 
 	# FIXME: comment needed
 	def set_server(self, server):
@@ -1142,12 +1144,12 @@ class GpxGUI(object):
 	def on_zoom_out(self, widget):
 		self.map.zoom_out()
 
-	# Called whenever the drop-down interaction mode selector above the map
-	# is changed. We keep its state synced with the state of the sidebar.
-	def on_mode_selector_changed(self, widget):
+	# Called whenever the drop-down layer selector is is moved.
+	# We keep its state synced with the state of the sidebar notebook.
+	def on_layer_selector_changed(self, widget):
 		print "Interaction mode selector changed"
 		if self.mode_signal_enabled:
-			self.sidebar.set_current_page(widget.get_active())
+			self.sidebar_notebook.set_current_page(widget.get_active())
 
 	# Whenever a different tool is selected
 	def on_toolbutton_toggled(self, widget):
@@ -1172,7 +1174,7 @@ class GpxGUI(object):
 			self.map.set_cursor(None)
 
 		# Inform the active layer of the tool change. If it throws
-		# an exception, press the button for tool_select.
+		# an exception, press the button for tool_select_adjust.
 		try:
 			message = self.map.set_tool(self.tool)
 			self.ui.show_status(message)
@@ -1180,7 +1182,7 @@ class GpxGUI(object):
 		except NotImplementedError:
 			print "Layer rejected tool:", self.tool
 			# Switch back to the Select tool
-			self.builder.get_object("tool_select").set_active(True)
+			self.builder.get_object("tool_select_adjust").set_active(True)
 			return False
 
 	# This is called repeatedly as the mouse pointer moves over the map.
@@ -1732,7 +1734,7 @@ class GpxGUI(object):
 	#==========================================================================
 
 	def edit_paste_search_cb(self, pasted_text):
-		self.sidebar.set_current_page(3)	# search
+		self.sidebar_notebook.set_current_page(3)	# search
 		self.builder.get_object("search_terms").set_text(pasted_text)
 
 	#==========================================================================
@@ -1917,6 +1919,7 @@ class GpxGUI(object):
 				self.search_results.select((0,), "gui")
 
 	def on_search_clear(self, widget):
+		self.builder.get_object("search_terms").set_text("")
 		self.search_results.clear()
 
 # end of file

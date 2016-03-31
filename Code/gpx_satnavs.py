@@ -1,7 +1,7 @@
 # gpx_satnavs.py
 # Copyright 2013, 2014, Trinity College
 # Interface to GPS navigators
-# Last modified: 1 September 2014
+# Last modified: 27 December 2014
 
 import sys
 import subprocess
@@ -35,22 +35,29 @@ class GpxSatnavs(object):
 	def scan(self):
 		print "Scanning for satnavs:"
 		path_list = []
-		
+
+		# Possible paths
 		if sys.platform.startswith("linux"):
-			for device in os.listdir("/media"):
-				path_list.append(os.path.join("/media", device))
+			mounts = open("/proc/mounts")
+			for line in mounts:
+				mountpoint, fstype = line.split(" ")[1:3]
+				if fstype == "vfat":
+					path_list.append(mountpoint)
+			mounts.close()
 
 		elif sys.platform == "win32":
 			for drive in ("d","e","f","g","h","i","j","k"):
 				path_list.append("%s:\\" % drive)
 
 		elif sys.platform == "darwin":
+			# FIXME: code missing
 			pass
 
+		# Try the possible paths
 		for path in path_list:
 			print "  %s" % path
 
-			# Tomtom
+			# Is it a Tomtom One?
 			test_path = os.path.join(path, "ttgo.bif")
 			if os.path.exists(test_path):
 				f = open(test_path, "r")
@@ -63,9 +70,9 @@ class GpxSatnavs(object):
 				f.close()
 				continue
 
-			# Garmin in mass storage mode
-			test_path = os.path.join(path, "Garmin")
-			if os.path.isdir(test_path):
+			# Is it a Garmin Nuvi?
+			test_path = os.path.join(path, "Garmin", "GarminDevice.xml")
+			if os.path.isfile(test_path):
 				self.liststore.append([ "Garmin Nuvi", GpxGpsrGarminMS(path) ])
 				continue
 
@@ -153,17 +160,18 @@ class GpxGpsrGpsbabel(object):
 #=============================================================================
 class GpxGpsrGarminMS(object):
 	def __init__(self, path):
-		self.gpx_path = os.path.join(path, "Garmin", "Gpx")
+		self.gpx_path = os.path.join(path, "GPX")
 		self.seq = 1
 	def load(self, datastore, ui):
 		datastore.load_gpx(open(os.path.join(self.gpx_path, "Current.gpx"), "r"))
 		return True
 	def send_obj(self, obj, ui):
 		filename = None
-		while filename == None or os.path.exists(filename):
-			filename = os.path.join(self.gpx_path, "new-%03d" % self.seq)
+		while filename is None or os.path.exists(filename):
+			filename = os.path.join(self.gpx_path, "Trip Planner %03d.gpx" % self.seq)
 			self.seq += 1
-		obj.write(GpxWriter(filename))
+		writer = GpxWriter(open(filename, "w"))
+		obj.write(writer)
 		return True
 
 #=============================================================================
@@ -187,27 +195,17 @@ class GpxGpsrTomtomMS(object):
 					route_point.type = "stop"
 				route.append(route_point)
 		return True
-	# NOTE: This actually works for routes. Perhaps in future we can find a
-	# way to use it without creating unjustified expectations in the mind
-	# of the user.
-	#def save(self, datastore, ui):
-	#	created_route_files = set([])
-	#	for route in datastore.routes:
-	#		filename = self.write_itn(route)
-	#		created_route_files.add(filename)
-	#	for filename in glob.glob(os.path.join(self.itn_path, "*.itn")):
-	#		if not filename in created_route_files:
-	#			print "Delete:", filename
-	#			os.unlink(filename)
-	#	return True
 	def send_obj(self, obj, ui):
-		if type(obj) is not GpxRoute:
-			ui.error("Only routes may be sent to Tomtom GPSrs in mass storage mode.")
+		if type(obj) is GpxWaypoint or type(obj) is GpxRoutePoint:
+			return self.write_itn([obj], obj.name) != None
+		elif type(obj) is GpxRoute:
+			return self.write_itn(obj, obj.name) != None
+		else:
+			ui.error("Only points and routes may be sent to Tomtom GPSrs.")
 			return False
-		return self.write_itn(obj) != None
-	def write_itn(self, obj):
+	def write_itn(self, obj, name):
 		from pykarta.formats.tomtom_itn import ItnPoint, ItnWriter
-		filename = os.path.join(self.itn_path, "%s.itn" % obj.name)
+		filename = os.path.join(self.itn_path, "%s.itn" % name)
 		print "Creating:", filename
 		writer = ItnWriter(open(filename, "w"))
 		for point in obj:

@@ -1,6 +1,6 @@
 # gpx_data_gpx.py
-# Copyright 2013, 2014, Trinity College
-# Last modified: 17 July 2014
+# Copyright 2013, 2014, 2015, Trinity College
+# Last modified: 18 August 2015
 
 import gtk
 import gobject
@@ -9,7 +9,8 @@ import xml.sax.saxutils
 import math
 
 import pykarta.geometry
-from pykarta.maps.projection import project_to_tilespace
+import pykarta.geometry.simplify
+from pykarta.geometry.projection import project_to_tilespace
 
 #=============================================================================
 # GPX format support
@@ -74,7 +75,7 @@ class GpxPoint(object):
 		for i in self.children:
 			value = getattr(self, i)
 			if i == "link":				# FIXME: should be true if i is an object
-				if value != None:
+				if value is not None:
 					value.write(writer)
 			elif value != "":
 				writer.characters(" ")
@@ -106,12 +107,12 @@ class GpxPerson(object):
 	def write(self, writer, person_type="author"):
 		writer.characters(" ")
 		writer.startElementNL(person_type, {})
-		if self.name != None:
+		if self.name is not None:
 			writer.characters("  ")
 			writer.simpleTextElement('name', self.name)
-		if self.email != None:
+		if self.email is not None:
 			self.email.write(writer)
-		if self.link != None:
+		if self.link is not None:
 			self.link.write(writer)
 		writer.characters(" ")
 		writer.endElementNL(person_type)
@@ -130,10 +131,10 @@ class GpxCopyright(object):
 	def write(self, writer):
 		writer.characters(" ")
 		writer.startElementNL("copyright", {'author': self.author})
-		if self.year != None:
+		if self.year is not None:
 			writer.characters("  ")
 			writer.simpleTextElement('year', self.year)
-		if self.license != None:
+		if self.license is not None:
 			writer.characters("  ")
 			writer.simpleTextElement('license', self.license)
 		writer.characters(" ")
@@ -155,10 +156,10 @@ class GpxLink(object):
 	def write(self, writer, link_tag="link"):
 		writer.characters(" ")
 		writer.startElementNL(link_tag, {'href': self.href})
-		if self.text != None:
+		if self.text is not None:
 			writer.characters("  ")
 			writer.simpleTextElement('text', self.text)
-		if self.type != None:
+		if self.type is not None:
 			writer.characters("  ")
 			writer.simpleTextElement('type', self.type)
 		writer.characters(" ")
@@ -301,7 +302,7 @@ class GpxMetadata(object):
 		obj = self
 		for attr_name in path:
 			obj = getattr(obj, attr_name)
-			if obj == None:
+			if obj is None:
 				break
 		return obj
 
@@ -311,7 +312,7 @@ class GpxMetadata(object):
 		obj = self
 		for attr_name in path[:-1]:
 			child_obj = getattr(obj, attr_name)
-			if child_obj == None:
+			if child_obj is None:
 				if attr_name == 'author':
 					child_obj = GpxPerson()
 				elif attr_name == 'copyright':
@@ -332,7 +333,7 @@ class GpxMetadata(object):
 		writer.startElementNL("metadata")
 		for child_name in self.children:
 			value = getattr(self, child_name)
-			if value == None:
+			if value is None:
 				pass
 			elif type(value) == unicode or type(value) == str:
 				if value != "":
@@ -357,11 +358,19 @@ class GpxWaypoint(GpxPoint):
 	def __init__(self, *args):
 		GpxPoint.__init__(self, *args)
 		self.gpxtp_show = True
+		self.bbox = None
 	def write_extensions(self, writer):
 		if not self.gpxtp_show:
 			writer.startElementNL("extensions", {})
 			writer.simpleTextElement("gpxtp:show", "false")
 			writer.endElementNL("extensions")
+	def get_bbox(self):
+		if self.bbox is None:
+			self.bbox = pykarta.geometry.BoundingBox()
+			self.bbox.add_point(pykarta.geometry.Point(self.lat, self.lon))
+		return self.bbox
+	def touch(self):
+		self.bbox = None	
 
 class GpxGeocache(object):
 	pass
@@ -393,7 +402,6 @@ class GpxRoutes(GpxToplevelListofLists):
 		self.picklist.append([save_first])
 
 	def __delitem__(self, path):
-		print "delitem:", path
 		GpxToplevelListofLists.__delitem__(self, path)
 		if type(path) == int:
 			path = (path,)
@@ -451,7 +459,7 @@ class GpxRoute(object):
 			point.write(writer, "rtept")
 		writer.endElementNL("rte")
 	def get_bbox(self):
-		if self.bbox == None:
+		if self.bbox is None:
 			self.bbox = pykarta.geometry.BoundingBox()
 			for point in self:
 				self.bbox.add_point(point)
@@ -493,7 +501,7 @@ class GpxTracks(GpxToplevelListofLists):
 			points = []
 			remove_paths = []
 			iter = self.datastore.get_iter(path)
-			while iter != None:
+			while iter is not None:
 				points.append(self.datastore.get_value(iter, 0))
 				remove_paths.insert(0, self.datastore.get_path(iter))
 				iter = self.datastore.iter_next(iter)
@@ -542,7 +550,7 @@ class GpxTrack(object):
 		self.gpxx_DisplayColor = ""
 	def __iter__(self):
 		iter = self.datastore.iter_children(self.iter)
-		while iter != None:
+		while iter is not None:
 			trackseg = self.datastore.get_value(iter, 0)
 			yield trackseg
 			iter = self.datastore.iter_next(iter)
@@ -582,7 +590,7 @@ class GpxTrackSegment(object):
 		self.projected_simplified_points = None
 	def __iter__(self):
 		iter = self.datastore.iter_children(self.iter)
-		while iter != None:
+		while iter is not None:
 			yield self.datastore.get_value(iter, 0)
 			iter = self.datastore.iter_next(iter)
 	def append(self, point):
@@ -609,7 +617,7 @@ class GpxTrackSegment(object):
 			point.write(writer, "trkpt")
 		writer.endElementNL("trkseg")
 	def get_bbox(self):
-		if self.bbox == None:
+		if self.bbox is None:
 			self.bbox = pykarta.geometry.BoundingBox()
 			for point in self:
 				self.bbox.add_point(point)
@@ -622,7 +630,7 @@ class GpxTrackSegment(object):
 			self.projected_simplified_points = {}
 		if not zoom in self.projected_simplified_points:
 			tolerance = 1 / (256.0 * math.pow(2, zoom))
-			self.projected_simplified_points[zoom] = pykarta.geometry.line_simplify(self.projected_points, tolerance)
+			self.projected_simplified_points[zoom] = pykarta.geometry.simplify.line_simplify(self.projected_points, tolerance)
 			print "Simplified %d points to %d points at zoom level %d with tolerance %f" % (len(self.projected_points), len(self.projected_simplified_points[zoom]), zoom, tolerance)
 		return self.projected_simplified_points[zoom]
 
@@ -680,7 +688,7 @@ class GpxData(xml.sax.handler.ContentHandler):
 
 	# Write the data out using an GpxWriter() instance
 	def write(self, writer):
-		if self.metadata != None:
+		if self.metadata is not None:
 			self.metadata.write(writer)
 		self.waypoints.write(writer)
 		self.routes.write(writer)
@@ -729,7 +737,7 @@ class GpxData(xml.sax.handler.ContentHandler):
 				self.obj_stack.insert(0, new_track)
 			elif name == "metadata" and self.gpx_version == "1.1":
 				new_metadata = GpxMetadata()
-				if self.metadata == None:			# if first one,
+				if self.metadata is None:			# if first one,
 					self.metadata = new_metadata
 				self.obj_stack.insert(0, new_metadata)
 			elif self.gpx_version == "1.0" and name in GpxMetadata.compat_children:

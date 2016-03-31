@@ -1,7 +1,7 @@
 # encoding=utf-8
 # gpx_reference_layers.py
 # Copyright 2013, 2014, Trinity College
-# Last modified: 15 September 2014
+# Last modified: 1 October 2014
 
 class GpxTileLayer(object):
 	def __init__(self, importance, display_name, tileset_names, default=False, tooltip=None, overlay=False):
@@ -17,26 +17,17 @@ class GpxTileLayer(object):
 
 layers = (
 	GpxTileLayer(1, _("Blank White"), []),
-	GpxTileLayer(1, _("OSM Experimental Vector"), (
-								"osm-vector-landuse",
-								"osm-vector-water",
-								"osm-vector-buildings",
-								"osm-vector-roads",
-								"osm-vector-road-labels",
-								"osm-road-refs",
-								"osm-vector-pois",
-								#"tile-debug",
-								), default=True),
+	GpxTileLayer(1, _("OSM Experimental Vector"), "osm-vector", default=True),
 	GpxTileLayer(1, _("OSM Openmapsurfer"), "openmapsurfer-roads", default=False),
 	None,
 	# Layers on www.openstreetmap.org slippy map
 	GpxTileLayer(1, _("OSM Standard"), "osm-default"),
 	GpxTileLayer(2, _("OSM Standard without labels"), "toolserver-osm-no-labels"),
-	GpxTileLayer(2, _("Overlay OSM Russian Labels"), "toolserver-osm-labels-ru", overlay=True),
 	GpxTileLayer(1, _("OSM Cycle Map"), "osm-cycle"),
 	GpxTileLayer(1, _("OSM Public Transport"), "osm-transport"),
 	GpxTileLayer(1, _("OSM Mapquest Open"), "osm-mapquest-open"),
 	GpxTileLayer(1, _("OSM Humanitarian"), "osm-humanitarian"),
+	GpxTileLayer(1, _("OSM HikeBikeMap"), "toolserver-hikebike"),
 	None,
 	GpxTileLayer(1, _("OSM Stamen Toner Background"), ("stamen-toner-background", "screen-0.7")),
 	GpxTileLayer(1, _("OSM Stamen Toner Labels"), "stamen-toner-labels", overlay=True),
@@ -44,14 +35,13 @@ layers = (
 	GpxTileLayer(1, _("OSM TopOSM"), ("toposm-color-relief", "toposm-contours", "toposm-features")),
 	GpxTileLayer(1, _("OSM Mapbox Streets"), "mapbox-streets"),
 	None,
-	GpxTileLayer(1, _("Overlay Hillshading"), "toolserver-shadows", overlay=True),
-	GpxTileLayer(1, _("Overlay Town Borders"), "tc-towns", overlay=True),
+	GpxTileLayer(1, _("Overlay Hillshading"), "toolserver-hillshading", overlay=True),
 	GpxTileLayer(1, _("Overlay Parcel Borders"), "tc-parcels", overlay=True),
 	GpxTileLayer(1, _("Overlay Tile Borders"), "tile-debug", overlay=True),
 	None,
-	GpxTileLayer(1, _("Blue Marble"), "modestmaps-bluemarble"),
-	GpxTileLayer(1, _("Openaerial/OSM Hybrid"), ("mapquest-openaerial", "geoiq-acetate")),
 	GpxTileLayer(1, _("Bing Aerial/OSM Hybrid"), ("bing-aerial", "geoiq-acetate")),
+	GpxTileLayer(1, _("Openaerial/OSM Hybrid"), ("mapquest-openaerial", "geoiq-acetate")),
+	GpxTileLayer(1, _("Blue Marble"), "modestmaps-bluemarble"),
 	None,
 	GpxTileLayer(2, _("ArcGIS World Imagery"), "arcgis-world-imagery"),
 	GpxTileLayer(2, _("ArcGIS World Imagery Hybrid"), ("arcgis-world-imagery", "arcgis-world-reference-overlay")),
@@ -68,15 +58,11 @@ layers = (
 	GpxTileLayer(2, _("Mapquest Hybrid"), ("mapquest-satellite", "mapquest-hybrid")),
 	GpxTileLayer(2, _("Mapquest Traffic"), "mapquest-traffic", overlay=True),
 	None,
-	GpxTileLayer(3, _("MassGIS Base Map"), "massgis-base"),
-	GpxTileLayer(3, _("MassGIS with Labels"), "massgis-base-with-labels"),
-	GpxTileLayer(3, _("MassGIS with Labels 2"), "massgis-base-with-labels2"),
-	GpxTileLayer(1, _("MassGIS L3 Parcels"), "massgis-l3parcels", overlay=True),
-	GpxTileLayer(3, _("MassGIS Structures"), "massgis-structures", overlay=True),
-	GpxTileLayer(3, _("MassGIS Orthos 199X"), "massgis-orthos-199X"),
-	GpxTileLayer(3, _("MassGIS Orthos 2005"), "massgis-orthos-2005"),
+	GpxTileLayer(3, _("MassGIS L3 Parcels"), "massgis-l3parcels", overlay=True),
+	GpxTileLayer(1, _("MassGIS Orthos 199X"), "massgis-orthos-199X"),
+	GpxTileLayer(1, _("MassGIS Orthos 2005"), "massgis-orthos-2005"),
 	GpxTileLayer(1, _("MassGIS Orthos 2009"), "massgis-orthos-2009"),
-	GpxTileLayer(2, _("MassGIS Orthos 2009 TC"), "massgis-orthos-2009_tc"),
+	GpxTileLayer(1, _("MassGIS Orthos 2014"), "massgis-orthos-2014"),
 	GpxTileLayer(3, _("MassGIS USGS Topos"), "massgis-usgs-topos"),
 	)
 

@@ -1,22 +1,22 @@
 #=============================================================================
 # gpx_layer_tracks.py
 # Track map layer
-# Copyright 2013, Trinity College
-# Last modified: 5 July 2013
+# Copyright 2013, 2014, 2015, Trinity College
+# Last modified: 2 April 2015
 #=============================================================================
 
 import gtk
 import math
 import cairo
 
-from gpx_layer import GpxVectorLayer
+from gpx_layer import GpxEditableLayer, GpxTool, points_close
 import pykarta.geometry
 import pykarta.draw
 import gpx_colors
 
-class TrackLayer(GpxVectorLayer):
+class TrackLayer(GpxEditableLayer):
 	def __init__(self, gpx_data):
-		GpxVectorLayer.__init__(self)
+		GpxEditableLayer.__init__(self)
 
 		# Two-way connexion between this layer and data store
 		self.layer_objs = gpx_data.tracks
@@ -27,12 +27,10 @@ class TrackLayer(GpxVectorLayer):
 		self.point_show_level = 15
 		self.point_zoom_level = 16
 
-		self.selected_path = None
-
 	def on_select(self, path, source, client_name):
 		self.selected_path = path
 
-		if path != None and source != 'picker':
+		if path is not None and source != 'picker':
 			if len(path) == 3:		# click on single point
 				point = self.layer_objs[path[0]][path[1]][path[2]]
 				zoom = self.containing_map.get_zoom()
@@ -52,14 +50,9 @@ class TrackLayer(GpxVectorLayer):
 						bbox.add_point(pykarta.geometry.Point(point.lat, point.lon))
 				self.containing_map.zoom_to_extent(bbox)
 	
-		self.containing_map.queue_draw()	
+		GpxEditableLayer.on_select(self, path, source, client_name)
 
-	def set_tool(self, tool):
-		if tool != None and tool != "tool_select":
-			raise NotImplementedError
-		GpxVectorLayer.set_tool(self, tool)
-		return _("Click to select track points.")
-
+	# Override do_viewport() because he have to handle two levels.
 	def do_viewport(self):
 		map_bbox = self.containing_map.get_bbox()
 		zoom = self.containing_map.get_zoom()
@@ -71,81 +64,75 @@ class TrackLayer(GpxVectorLayer):
 				trackseg_i = 0
 				for track_segment in track:
 					if track_segment.get_bbox().overlaps(map_bbox):
-						color = gpx_colors.rgb_by_name.get(track.gpxx_DisplayColor, (1.0, 0.0, 0.0, 1.0))
-						points = self.containing_map.scale_points(track_segment.get_projected_simplified_points(zoom))
-						self.visible_objs.append([track_i, trackseg_i, points, color])
+						self.visible_objs.append(self.create_renderer((track, track_segment), (track_i, trackseg_i)))
 					trackseg_i += 1
 					trackseg_count += 1
 			track_i += 1
 		self.containing_map.feedback.debug(1, " %d of %d track segments in view" % (len(self.visible_objs), trackseg_count))
 
-	def do_draw(self, ctx):
-		zoom = self.containing_map.get_zoom()
+	def create_renderer(self, obj, index):
+		class TrackRenderer(object):
+			def __init__(self, obj, index, layer):
+				self.track, self.track_segment = obj
+				self.track_i, self.trackseg_i = index
+				self.layer = layer
+				containing_map = layer.containing_map
+				self.color = gpx_colors.rgb_by_name.get(self.track.gpxx_DisplayColor, (1.0, 0.0, 0.0, 1.0))
+				self.projected_points = containing_map.scale_points(
+					self.track_segment.get_projected_simplified_points(containing_map.get_zoom())
+					)
+				self.zoom = containing_map.get_zoom()
+			def draw(self, ctx, selected_path):
 
-		# Step through the visible track segments
-		for segment in self.visible_objs:
-			track_i, trackseg_i, points, color = segment
-
-			if self.selected_path and self.selected_path[0] == track_i:
-				line_width = 4
-			else:
-				line_width = 2
-
-			# Draw track line
-			pykarta.draw.line_string(ctx, points)
-			ctx.set_line_width(line_width)
-			ctx.set_source_rgba(*color)
-			ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-			ctx.stroke()
-			ctx.set_line_join(cairo.LINE_JOIN_MITER)
-
-			# If zoomed in far enough, draw direction of travel arrows
-			if zoom > self.arrow_show_level:
-				pykarta.draw.line_string_arrows(ctx, points, line_width=line_width)
+				if selected_path and selected_path[0] == track_i:
+					line_width = 4
+				else:
+					line_width = 2
+	
+				# Draw track line
+				pykarta.draw.line_string(ctx, self.projected_points)
+				ctx.set_line_width(line_width)
+				ctx.set_source_rgba(*self.color)
+				ctx.set_line_join(cairo.LINE_JOIN_ROUND)
 				ctx.stroke()
+				ctx.set_line_join(cairo.LINE_JOIN_MITER)
+	
+				# If zoomed in far enough, draw direction of travel arrows
+				if self.zoom > self.layer.arrow_show_level:
+					pykarta.draw.line_string_arrows(ctx, self.projected_points, line_width=line_width)
+					ctx.stroke()
+	
+				# If this layer is active and map is zoomed in far enough, draw track point markers.
+				if self.layer.drawing_tool is not None and self.zoom >= self.point_show_level:
+					point_i = 0
+					for point in points:
+						if selected_path == (self.track_i, self.trackseg_i, point_i):
+							ctx.arc(point[0], point[1], self.radius-1, 0, 2*math.pi)
+							ctx.set_line_width(4)
+						else:
+							ctx.arc(point[0], point[1], self.radius, 0, 2*math.pi)
+							ctx.set_line_width(1)
+						ctx.set_source_rgba(*self.color)
+						ctx.stroke_preserve()
+						ctx.set_source_rgb(1.0, 1.0, 1.0)		# white
+						ctx.fill()
+						point_i += 1
+		return TrackRenderer(obj, index, self)
 
-			# If this layer is active and map is zoomed in far enough, draw track point markers.
-			if self.tool != None and zoom >= self.point_show_level:
-				point_i = 0
-				for point in points:
-					if self.selected_path == (track_i, trackseg_i, point_i):
-						ctx.arc(point[0], point[1], self.radius-1, 0, 2*math.pi)
-						ctx.set_line_width(4)
-					else:
-						ctx.arc(point[0], point[1], self.radius, 0, 2*math.pi)
-						ctx.set_line_width(1)
-					ctx.set_source_rgba(*color)
-					ctx.stroke_preserve()
-					ctx.set_source_rgb(1.0, 1.0, 1.0)		# white
-					ctx.fill()
-					point_i += 1
-
-	def on_button_press(self, gdkevent):
-		# If this layer is not active, we are done.
-		if self.tool == None:
-			return False
-
-		# If not single click with left button, we are done.
-		if gdkevent.type != gtk.gdk.BUTTON_PRESS or gdkevent.button != 1:
-			return False
-
-		# If tracks are not shown at this zoom level, we are done.
-		if self.containing_map.get_zoom() < self.point_show_level:
-			return False
-
-		# If user hit a track point, select it.
-		for segment in self.visible_objs:
-			track_i, trackseg_i, points, color = segment
-			point_i = 0
-			for point in points:
-				x, y = point
-				if abs(gdkevent.x - x) <= self.radius and abs(gdkevent.y - y) <= self.radius:
-					print "Hit track point"
-					self.selected_path = (track_i, trackseg_i, point_i)
-					self.layer_objs.select(self.selected_path, "map_layer")
-					self.containing_map.queue_draw()
-					return True
-				point_i += 1
-
-		return False
+	def create_tool_select_adjust(self):
+		class TrackpointSelector(GpxTool):
+			def __init__(self, layer):
+				self.layer = layer
+			def on_button_press(self, gdkevent):
+				if self.zoom >= self.layer.point_show_level:
+					event_point = (gdkevent.x, gdkevent.y)
+					for segment in self.layer.visible_objs:
+						point_i = 0
+						for point in segment.projected_points:
+							if points_close(point, event_point):
+								print "Hit track point"
+								self.layer.select((segment.track_i, segment.trackseg_i, point_i))
+								return True
+							point_i += 1
+				return False
 

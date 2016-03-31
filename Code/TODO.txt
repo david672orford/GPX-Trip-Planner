@@ -3,18 +3,25 @@
  * Wrapping around from 180 degress to -180 degrees is not handled properly.
    POIs on only one side the line are shown and that side flips as one scrolls
    the map center back and forth accross this meridian.
-  * Import from a turned-off GPS produces an GPX parse error. We should
-    to try get an error message which specificly names the cause
-  * Import of tracks (over the Garmin USB protocol) produces one multi-segment
-    track whereas the GPX files which the GPSr writes itself to the SD card
-    has multiple tracks. It would be more useful to have multiple tracks
-    in both cases.
+ * Import from a turned-off GPS produces an GPX parse error. We should
+   to try get an error message which specificly names the cause
+ * Import of tracks (over the Garmin USB protocol) from an Etrex produces
+   one multi-segment track whereas the GPX files which the GPSr writes to
+   the SD card has multiple tracks. It would be more useful to have multiple
+   tracks in both cases.
+ * Test new Tomtom mass storage export code
 
-* Implement Undo (long term goal)
+* POIs Layer
+ * Show pixbufs in selector
+ * Add a way to call POI loader (which loads them into the Sqlite database)
+   by passing an option to gpx-trip-planner command. Or maybe have it 
+   import CSV files using a dependancy system.
+ * Should the BMP files be imported into the Sqlite database as blobs?
+ * Do something useful (such as displaying a popup) when a POI is clicked.
 
 * Map improvements
- * Apply pan-zoom rules for waypoints and search results to 
-   clicks on route points too.
+ * Apply the auto panning and zooming when the user clicks on waypoints and search
+   results to clicks on route points too.
  * Save layers, center, and zoom level in GPX file.
  * Change the waypoint, and route layer to use the same drawing
    semantics as pykarta.map.layers.vector (which follows the 
@@ -31,15 +38,9 @@
  * Geocaching.com
  * Opencaching.us, etc.
 
-* Possible Search Sources 
+* Possible New Search Sources 
  * Google Maps
  * Geonames.org
 
-* POIs Layer
- * Show pixbufs in selector
- * Add a way to call POI loader (which loads them into the Sqlite database)
-   by passing an option to gpx-trip-planner command. Or maybe have it 
-   import CSV files using a dependancy system.
- * Should the BMP files be imported into the Sqlite database as blobs?
- * Do something useful (such as displaying a popup) when a POI is clicked.
+* Implement Undo (long term goal)
 

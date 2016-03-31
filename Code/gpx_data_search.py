@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # gpx_data_search.py
 # Copyright 2013, Trinity College
-# Last modified: 29 March 2013
+# Last modified: 19 December 2014
 
 import gtk
 import gobject
@@ -12,60 +12,13 @@ import json
 from gpx_data_gpx import GpxPoint
 import pykarta.geometry
 
-base_url = "http://open.mapquestapi.com/nominatim/v1/search?format=xml&addressdetails=1&polygon=1&limit=100"
-
-# One of these for each search match. It expands GpxPoint to include
-# a zoom level at which to display it.
-class SearchMatch(GpxPoint):
-	def __init__(self, *args):
-		GpxPoint.__init__(self, *args)
-		self.zoom = None
-		self.polygonpoints = []
-
-# This object wraps a gtk.Liststore which contains the list of 
-# search matches.
-class SearchMatches(object):
-	def __init__(self, map_obj):
-		self.datastore = gtk.ListStore(gobject.TYPE_PYOBJECT, gobject.TYPE_STRING, gtk.gdk.Pixbuf, gobject.TYPE_STRING)
-		self.map_obj = map_obj
-
-		# This clients of this datastore
-		self._clients = {}
-
-		self.datastore.connect("row-deleted", self.row_cb)
-		self.datastore.connect("row-changed", self.row_cb)
-
-	def row_cb(self, treemodel, path, iter=None):
-		if 'map_layer' in self._clients:
-			self._clients['map_layer'].set_stale()
-
-	def add_client(self, client_name, client_obj):
-		self._clients[client_name] = client_obj
-
-	def clear(self):
-		self.select(None, "clear()")
-		self.datastore.clear()
-
-	def append(self, match):
-		self.datastore.append([match, len(self.datastore)+1, self.map_obj.symbols.get_symbol(match.sym, None).get_pixbuf(), match.desc])
-
-	def __len__(self):
-		return len(self.datastore)
-
-	def __getitem__(self, index):
-		return self.datastore[index][0]
-
-	def select(self, path, source):
-		print "%s: %s selected %s" % ("SearchMatches", source, path)
-		for client_name, client_obj in self._clients.items():
-			if client_name != source:
-				client_obj.on_select(path, source, client_name)
+#base_url = "http://open.mapquestapi.com/nominatim/v1/search?format=xml&addressdetails=1&polygon=1&limit=100"
+base_url = "http://nominatim.openstreetmap.org/search?format=xml&addressdetails=1&polygon=1&limit=100"
 
 def search_nominatim(search_terms, scope=None, bbox=None):
 	print "Search for:", search_terms
 
 	if scope == "scope_within":
-		#scope_params = "&viewbox=%s,%s,%s,%s&bounded=1&polygon=1" % (left, top, right, bottom)
 		scope_params = "&viewbox=%s,%s,%s,%s&bounded=1&polygon=1" % (bbox.min_lon, bbox.max_lat, bbox.max_lon, bbox.min_lat)
 	elif scope == "scope_usa":
 		scope_params = "&countrycodes=US"
@@ -74,7 +27,7 @@ def search_nominatim(search_terms, scope=None, bbox=None):
 
 	url = "%s%s&q=%s" % (base_url, scope_params, search_terms.replace(' ', '+'))
 	print "URL:", url
-	http_resp = urllib2.urlopen(url)
+	http_resp = urllib2.urlopen(url, timeout=10)
 	resp_text = unicode(http_resp.read())
 	#print resp_text
 	tree = ET.XML(resp_text)
@@ -154,6 +107,53 @@ def search_nominatim(search_terms, scope=None, bbox=None):
 		answer.append(match_obj)
 
 	return answer
+
+# One of these for each search match. It expands GpxPoint to include
+# a zoom level at which to display it.
+class SearchMatch(GpxPoint):
+	def __init__(self, *args):
+		GpxPoint.__init__(self, *args)
+		self.zoom = None
+		self.polygonpoints = []
+
+# This object wraps a gtk.Liststore which contains the list of 
+# search matches.
+class SearchMatches(object):
+	def __init__(self, map_obj):
+		self.datastore = gtk.ListStore(gobject.TYPE_PYOBJECT, gobject.TYPE_STRING, gtk.gdk.Pixbuf, gobject.TYPE_STRING)
+		self.map_obj = map_obj
+
+		# This clients of this datastore
+		self._clients = {}
+
+		self.datastore.connect("row-deleted", self.row_cb)
+		self.datastore.connect("row-changed", self.row_cb)
+
+	def row_cb(self, treemodel, path, iter=None):
+		if 'map_layer' in self._clients:
+			self._clients['map_layer'].set_stale()
+
+	def add_client(self, client_name, client_obj):
+		self._clients[client_name] = client_obj
+
+	def clear(self):
+		self.select(None, "clear()")
+		self.datastore.clear()
+
+	def append(self, match):
+		self.datastore.append([match, len(self.datastore)+1, self.map_obj.symbols.get_symbol(match.sym, None).get_pixbuf(), match.desc])
+
+	def __len__(self):
+		return len(self.datastore)
+
+	def __getitem__(self, index):
+		return self.datastore[index][0]
+
+	def select(self, path, source):
+		print "%s: %s selected %s" % ("SearchMatches", source, path)
+		for client_name, client_obj in self._clients.items():
+			if client_name != source:
+				client_obj.on_select(path, source, client_name)
 
 if __name__ == "__main__":
 	import sys

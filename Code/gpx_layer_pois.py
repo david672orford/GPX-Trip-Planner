@@ -2,7 +2,7 @@
 # gpx_layer_pois.py
 # POIs map layer
 # Copyright 2013, 2014, Trinity College
-# Last modified: 25 August 2014
+# Last modified: 7 November 2014
 #
 # This is a static layer which displays POI icons loaded from CSV files
 # by gpx_data_poi.py.  This is used for displaying POIs downloaded from
@@ -25,21 +25,21 @@ class PoiLayer(MapLayer):
 		self.poi_db.add_client("map_layer", self)
 
 	def set_tool(self, tool):
-		if tool is not None and tool != "tool_select":
+		if tool is not None and tool != "tool_select_adjust":
 			raise NotImplementedError
 		self.tool = tool
-		self.containing_map.queue_draw()
+		self.redraw()
 		return _("POIs are now clickable.")
 
 	def category_checkbox_changed(self):
 		#print "POI layer: category checkbox changed"
 		self.set_stale()
 
-	# Unneeded
+	# Unneeded since there is no other control for selecting
 	#def on_select(self, path, source, client_name):
 	#	print "poi select:", path, source, client_name
 	#	self.selected_path = path
-	#	self.containing_map.queue_draw()
+	#	self.redraw()
 
 	def get_symbol_renderer(self, poi):
 		symbol = self.poi_db.symbols.get_symbol(poi.sym)
@@ -80,6 +80,7 @@ class PoiLayer(MapLayer):
 				print "Hit POI:", poi.name
 				self.selected_path = (poi.oid,)
 				self.poi_db.select(self.selected_path, 'map_layer')
+				self.redraw()
 				return True
 
 		return False
