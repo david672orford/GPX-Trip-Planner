@@ -9,11 +9,13 @@ Check out GPX Trip Planner and supporting libraries:
 
     $ mkdir GPX_Trip_Planner
     $ cd GPX_Trip_Planner
-    $ git clone https://github.com/david672orford/GPX_Trip_Planner.git
+    $ mkdir pygtk
+    $ cd pygtk
     $ git clone https://github.com/david672orford/pykarta.git
     $ git clone https://github.com/david672orford/pyapp.git
+    $ cd ..
+    $ git clone https://github.com/david672orford/GPX_Trip_Planner.git
 
 Start:
-    $ cd GPX_Trip_Planner
-    $ ./gpx-trip-planner
+    $ ./GPX_Trip_Planner/gpx-trip-planner
 
