@@ -9,6 +9,8 @@
 
 * Added new map layers provided by new versions of PyKarta
 
+* Removed Mapquest tile layers since they have been shut down
+
 ==============================================================================
  Changes in version 0.90
 ==============================================================================

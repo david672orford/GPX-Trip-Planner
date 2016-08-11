@@ -1,8 +1,8 @@
 #=============================================================================
 # gpx_layer_tracks.py
 # Track map layer
-# Copyright 2013, 2014, 2015, Trinity College
-# Last modified: 2 April 2015
+# Copyright 2013--2016, Trinity College
+# Last modified: 20 June 2016
 #=============================================================================
 
 import gtk
@@ -84,7 +84,7 @@ class TrackLayer(GpxEditableLayer):
 				self.zoom = containing_map.get_zoom()
 			def draw(self, ctx, selected_path):
 
-				if selected_path and selected_path[0] == track_i:
+				if selected_path and selected_path[0] == self.track_i:
 					line_width = 4
 				else:
 					line_width = 2
