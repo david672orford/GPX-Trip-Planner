@@ -10,6 +10,7 @@
    the SD card has multiple tracks. It would be more useful to have multiple
    tracks in both cases.
  * Test new Tomtom mass storage export code
+ * The prefix for GPX Trip Planners extensions does not match the declaration
 
 * POIs Layer
  * Show pixbufs in selector

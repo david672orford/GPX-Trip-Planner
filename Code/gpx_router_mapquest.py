@@ -1,6 +1,6 @@
 # gpx_router_mapquest.py
 # Copyright 2013, 2014, Trinity College
-# Last modified: 5 September 2014
+# Last modified: 15 March 2017
 
 import json
 import urllib2
@@ -11,7 +11,7 @@ from gpx_data_gpx import GpxRoutePoint, GpxRouteShapePoint
 class GpxRouter(object):
 
 	url = "http://open.mapquestapi.com/directions/v1/optimizedroute"
-	mapquest_api_key = "Fmjtd|luub2q68n1,rx=o5-961590"
+	mapquest_api_key = "yIb7lxTFBAzro3bFyox3wA3aGyEWRNgV"
 
 	def flesh_out(self, route):
 		print "Route:", route

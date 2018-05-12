@@ -157,7 +157,7 @@ msgstr ""
 
 #: gpx_gui.xml.py:37
 msgid "Flesh Out Route"
-msgstr "Дополнять маршрут"
+msgstr "Дополнить маршрут"
 
 #: gpx_gui.xml.py:38
 msgid ""

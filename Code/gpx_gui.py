@@ -1,8 +1,8 @@
 # coding=utf-8
 #=============================================================================
 # gpx_gui.py
-# Copyright 2013, 2014, 2015, Trinity College
-# Last modified: 18 August 2015
+# Copyright 2013--2018, Trinity College
+# Last modified: 29 April 2018
 #=============================================================================
 
 import sys
@@ -54,6 +54,13 @@ from gpx_router_mapquest import GpxRouter
 
 from gpx_satnavs import GpxSatnavs
 import gpx_josm
+
+#=============================================================================
+# Configure PyKarta
+#=============================================================================
+pykarta.api_keys["bing"] = "AiMQM9AWZQuAHQ0UotcHHaWVvp3M1OPTGPtxLXNnXAe74Q4tL1PnF4R_vEIrQ_Ue"
+pykarta.api_keys["thunderforest"] = "c93ee0262e8d445291ee83e5bab2f980"
+pykarta.server_url = os.environ.get('PYKARTA_SERVER_URL', pykarta.server_url)
 
 #=============================================================================
 # Treeviews for sidebar
@@ -918,8 +925,6 @@ class GpxGUI(object):
 		# Create the map widget
 		#---------------------------------------------------------
 		print "Creating map widget..."
-		pykarta.api_keys["bing"] = "AiMQM9AWZQuAHQ0UotcHHaWVvp3M1OPTGPtxLXNnXAe74Q4tL1PnF4R_vEIrQ_Ue"
-		pykarta.api_keys["mapzen"] = "{api_key}"
 		self.map = MapWidget(tile_source=None, debug_level=1)
 		self.builder.get_object("MapVbox").pack_end(self.map)
 		self.map.set_coordinates_cb(self.coordinates_cb)
@@ -1767,6 +1772,7 @@ class GpxGUI(object):
 			for layer in gpx_reference_layers.layers:
 				menu = menus.pop(0)
 				if layer:	# not separator
+					#print layer.display_name, layer.importance, choice
 					if layer.importance <= choice:
 						if sep:
 							sep.show()
