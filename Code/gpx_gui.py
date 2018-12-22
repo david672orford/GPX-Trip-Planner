@@ -2,7 +2,7 @@
 #=============================================================================
 # gpx_gui.py
 # Copyright 2013--2018, Trinity College
-# Last modified: 29 April 2018
+# Last modified: 24 May 2018
 #=============================================================================
 
 import sys
@@ -29,6 +29,7 @@ import pyapp.updater
 
 import pykarta
 import pykarta.geometry
+from pykarta.geometry.from_text import PointFromText
 from pykarta.maps.widget import MapWidget, MapPrint
 from pykarta.maps.layers import MapLayerBuilder, MapLayerScale, MapLayerAttribution, MapLayerCropbox, MapLayerLiveGPS
 from pykarta.gps.live import GPSlistener
@@ -693,7 +694,7 @@ class GpxEditMenu(object):
 			self.map.zoom_to_extent(self.data.get_bbox(mark=mark))
 			return
 
-		point = pykarta.geometry.PointFromText(pasted_text)
+		point = PointFromText(pasted_text)
 		if point is not None:
 			print "Parsed:", point
 			point = GpxWaypoint(point.lat, point.lon)	# convert Point() to GpxWaypoint()
