@@ -1859,7 +1859,7 @@ class GpxGUI(object):
 
 	def on_tools_precache_tiles(self, widget):
 		print "Tools->Precache Tiles"
-		self.map.precache_tiles(main_window=self.main_window, max_zoom=15)
+		self.map.precache_tiles(main_window=self.main_window, max_zoom=14)
 
 	def on_tools_reload_tiles(self, widget):
 		print "Tools->Reload Tiles"
