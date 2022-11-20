@@ -1,4 +1,4 @@
-GPX Trip Planner is a viewer and editor for GPX files. It uses the Pykarta
+GPX Trip Planner is a viewer and editor for GPX files. It uses the [Pykarta](https://github.com/david672orford/pykarta)
 map library written by the same author.
 
 Install PyGTK+, Cairo, and RSVG:
