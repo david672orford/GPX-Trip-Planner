@@ -1,9 +1,11 @@
 GPX Trip Planner is a viewer and editor for GPX files. It uses the Pykarta
 map library written by the same author.
 
-Install PyGTK+, Cairo, and RSVG:
+This program has been ported to Python 3 and GTK 3.0.
 
-    $ sudo apt-get install python-gtk2 python-cairo python-rsvg
+Install GObject for Python
+
+    $ sudo apt-get install python3-gi
 
 Check out GPX Trip Planner and supporting libraries:
 
@@ -14,13 +16,12 @@ Check out GPX Trip Planner and supporting libraries:
     $ git clone https://github.com/david672orford/pykarta.git
     $ git clone https://github.com/david672orford/pyapp.git
     $ cd ..
-    $ git clone https://github.com/david672orford/GPX_Trip_Planner.git
+    $ git clone https://github.com/david672orford/GPX-Trip-Planner.git
 
 Launch GPX Trip Planner:
 
-    $ ./GPX_Trip_Planner/gpx-trip-planner
+    $ ./GPX-Trip-Planner/gpx-trip-planner
 
 Website:
 
 	http://gpx.osm.trincoll.edu/
-
