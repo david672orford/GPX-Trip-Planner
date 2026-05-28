@@ -59,7 +59,7 @@ import pyapp.i18n
 from gpx_gui import GpxGUI
 from gpx_server import GpxServer
 
-pyapp.i18n.initialize(domain="gpx-trip-planner")
+pyapp.i18n.initialize("gpx-trip-planner")
 
 # Application object
 trip_planner = GpxGUI(profile_dir)

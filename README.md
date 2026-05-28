@@ -1,5 +1,6 @@
-GPX Trip Planner is a viewer and editor for GPX files. It uses the [Pykarta](https://github.com/david672orford/pykarta)
-map library written by the same author.
+GPX Trip Planner is a viewer and editor for GPX files. It uses the
+[Pykarta](https://github.com/david672orford/pykarta) map library written by the
+same author.
 
 This program has been ported to Python 3 and GTK 3.0.
 
@@ -22,6 +23,3 @@ Launch GPX Trip Planner:
 
     $ ./GPX-Trip-Planner/gpx-trip-planner
 
-Website:
-
-	http://gpx.osm.trincoll.edu/

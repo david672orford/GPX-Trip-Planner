@@ -1,7 +1,4 @@
-# gpx_satnavs.py
-# Copyright 2013--2023, Trinity College
-# Interface to GPS navigators
-# Last modified: 26 March 2023
+"""Interface to GPS navigators"""
 
 import sys
 import subprocess

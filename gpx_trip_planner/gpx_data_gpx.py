@@ -963,17 +963,18 @@ class GpxData(xml.sax.handler.ContentHandler):
 # To create a GPX file from data stored in the above objects, create one
 # of these and pass it to the write() method of an object.
 #=============================================================================
+
 class GpxWriter(xml.sax.saxutils.XMLGenerator):
 
 	def __init__(self, fh):
 		fh.write("<?xml version='1.0' encoding='UTF-8'?>\n")
 		xml.sax.saxutils.XMLGenerator.__init__(self, fh)
 		self.startElementNL("gpx", {
-			'version': "1.1",
-			'creator': "GPX Trip Planner",
-			'xmlns': "http://www.topografix.com/GPX/1/1",
-			'xmlns:gpxx': "http://www.garmin.com/xmlschemas/GpxExtensions/v3",
-			'xmlns:gpxrp': "http://www.trincoll.edu/xmlschemas/gpx-route-planner/v1",
+			"version": "1.1",
+			"creator": "GPX Trip Planner",
+			"xmlns": "http://www.topografix.com/GPX/1/1",
+			"xmlns:gpxx": "http://www.garmin.com/xmlschemas/GpxExtensions/v3",
+			"xmlns:gpxrp": "http://www.trincoll.edu/xmlschemas/gpx-route-planner/v1",
 			})
 
 	def __del__(self):

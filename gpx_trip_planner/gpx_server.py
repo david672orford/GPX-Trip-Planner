@@ -1,14 +1,11 @@
-#=============================================================================
-# gpx_server.py
-# Copyright 2013--2023, Trinity College
-# Last modified: 26 March 2023
-#=============================================================================
+"""Builtin web server"""
 
-from gi.repository import GObject
 import _thread
 import http.server
 import re
-import pyapp.gtk_thread
+
+from gi.repository import GObject
+from pyapp.gtk_call import GtkCallWrapper
 
 class GpxRequestHandler(http.server.BaseHTTPRequestHandler):
 
@@ -65,7 +62,7 @@ class GpxServer(object):
 		self.temp = {}
 		self.temp_index = 0
 
-		self.call_wrapper = pyapp.gtk_thread.GtkCallWrapper()
+		self.call_wrapper = GtkCallWrapper()
 
 		_thread.start_new_thread(self.httpd.serve_forever, ())
 

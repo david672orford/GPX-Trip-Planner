@@ -1,11 +1,7 @@
-# coding=utf-8
-#=============================================================================
-# gpx_gui.py
-# Copyright 2013--2025, Trinity College
-#=============================================================================
+"""GPX-Trip-Planner GUI"""
 
-import sys, os
-from gi.repository import Gtk, Gdk, GdkPixbuf
+import sys
+import os
 import math
 import glob
 import re
@@ -16,10 +12,12 @@ import subprocess
 import fnmatch
 import csv
 
+from gi.repository import Gtk, Gdk, GdkPixbuf
+
 import pyapp.gtk_common_ui
-import pyapp.svg_icons
+from pyapp.gtk_icons import load_svg_icon
 import pyapp.gtk_entry
-import pyapp.save
+from pyapp.saveopen import SaveOpen
 
 import pykarta
 import pykarta.geometry
@@ -138,10 +136,10 @@ class GpxFancyTreeView(GpxSimpleTreeView):
 			self.treeview.connect("button-press-event", self.button_press_cb)
 			column.connect("clicked", self.header_clicked_cb)
 
-			self.show_yes = pyapp.svg_icons.load_icon_pixbuf("show_yes.svg")
-			self.show_no  = pyapp.svg_icons.load_icon_pixbuf("show_no.svg")
+			self.show_yes = load_svg_icon("show_yes.svg")
+			self.show_no  = load_svg_icon("show_no.svg")
 			image = Gtk.Image()
-			image.set_from_pixbuf(pyapp.svg_icons.load_icon_pixbuf("show_header.svg"))
+			image.set_from_pixbuf(load_svg_icon("show_header.svg"))
 			column.set_widget(image)
 			image.show()
 
@@ -274,7 +272,8 @@ class GpxForm(object):
 		self.field_entries = []
 		for field_name in fields:
 			print("  form_%s_%s" % (stem, field_name))
-			widget = pyapp.gtk_entry.text_entry_wrapper(builder.get_object("form_%s_%s" % (stem, field_name)))
+			widget = pyapp.gtk_entry.text_entry_wrapper(
+				builder.get_object("form_%s_%s" % (stem, field_name)))
 
 			if field_name == "link":
 				widget.connect("clicked", self.link_clicked_cb)
@@ -1659,11 +1658,10 @@ class GpxGUI(object):
 					return False
 
 		busy = self.ui.busy(_("Saving to %s...") % filename)
-		f = pyapp.save.SaveOpen(filename)
-		writer = GpxWriter(f)
-		self.data.write(writer)
-		writer = None
-		f.close()
+		with SaveOpen(filename) as fh:
+			writer = GpxWriter(fh)
+			self.data.write(writer)
+			writer = None		# trigger __del__
 
 		self.data.clear_changes()
 		self.set_save_filename(filename)
